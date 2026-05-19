@@ -69,6 +69,10 @@ export async function uploadScore(score) {
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username");
 
+    if (!token) {
+        throw new Error("未登录或令牌已失效，请重新登录");
+    }
+
     const response = await fetch(`${API_BASE_URL}/score`, {
         method: "POST",
         headers: {
