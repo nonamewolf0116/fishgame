@@ -1,15 +1,14 @@
+server:
+  port: ${PORT:8080}
+
 spring:
   datasource:
-    url: mysql://root:ofwyPQGiClQcbltgkKwAiiHeputzBBmZ@ballast.proxy.rlwy.net:49304/railway
-    username: root
-    password: ofwyPQGiClQcbltgkKwAiiHeputzBBmZ
+    url: jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}
+    username: ${MYSQLUSER}
+    password: ${MYSQLPASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
-
     show-sql: true
-
-server:
-  port: 8080
