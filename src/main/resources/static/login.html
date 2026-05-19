@@ -102,6 +102,13 @@
             font-weight: 700;
         }
 
+        .message {
+            margin-top: 14px;
+            min-height: 22px;
+            font-size: 14px;
+            text-align: center;
+        }
+
         .fish {
             position: fixed;
             color: rgba(255, 255, 255, 0.18);
@@ -138,6 +145,7 @@
 
         <button type="submit">登录</button>
     </form>
+    <div id="message" class="message"></div>
 
     <div class="link">
         没有账号？<a href="register.html">去注册</a>
@@ -148,22 +156,44 @@
     import { login } from './js/api.js';
 
     const form = document.getElementById('loginForm');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const messageEl = document.getElementById('message');
+
+    function setMessage(text, type = 'info') {
+        messageEl.textContent = text;
+        messageEl.style.color = type === 'error' ? '#ff8c8c' : '#a8ffb9';
+    }
+
+    const savedUsername = sessionStorage.getItem('registerUsername');
+    const savedPassword = sessionStorage.getItem('registerPassword');
+    if (savedUsername) {
+        usernameInput.value = savedUsername;
+        passwordInput.value = savedPassword || '';
+        sessionStorage.removeItem('registerUsername');
+        sessionStorage.removeItem('registerPassword');
+        setMessage('已填写注册信息，请登录。', 'success');
+    }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (!username || !password) {
+            setMessage('用户名和密码不能为空', 'error');
+            return;
+        }
 
         try {
-            const result = await login(username, password);
-
-            alert('登录成功');
-
-            window.location.href = 'game.html';
-
+            await login(username, password);
+            setMessage('登录成功，正在进入游戏...', 'success');
+            setTimeout(() => {
+                window.location.href = 'game.html';
+            }, 600);
         } catch (err) {
-            alert(err.message || '登录失败');
+            setMessage(err.message || '登录失败', 'error');
         }
     });
 </script>

@@ -654,19 +654,53 @@
       state.running = false;
       titleEl.textContent = '游戏结束';
       msgEl.innerHTML = `最终分数：<b>${state.score}</b><br>当前体型：<b>${player.r.toFixed(1)}</b>`;
-      btn.textContent = '再来一局';
-      overlay.classList.add('show');
-
       const token = localStorage.getItem('token');
-      if (token && confirm('是否上传分数？')) {
-        uploadScore(state.score)
-          .then(() => {
-            alert('分数上传成功');
-          })
-          .catch(() => {
-            alert('上传失败');
-          });
+
+      if (token) {
+        btn.textContent = '上传分数';
+        overlayLeaderboardBtn.textContent = '不上传';
+        overlayLeaderboardBtn.style.display = 'inline-flex';
+        btn.disabled = false;
+        overlayLeaderboardBtn.disabled = false;
+
+        btn.onclick = async () => {
+          btn.disabled = true;
+          overlayLeaderboardBtn.disabled = true;
+          titleEl.textContent = '上传中...';
+          msgEl.textContent = '正在上传分数，请稍候';
+          try {
+            await uploadScore(state.score);
+            titleEl.textContent = '上传成功';
+            msgEl.textContent = '分数已上传，点击下方开始新游戏。';
+          } catch (err) {
+            titleEl.textContent = '上传失败';
+            msgEl.textContent = err.message || '上传失败，请稍后重试。';
+          }
+          btn.textContent = '再来一局';
+          overlayLeaderboardBtn.textContent = '排行榜';
+          btn.disabled = false;
+          overlayLeaderboardBtn.disabled = false;
+          btn.onclick = startGame;
+          overlayLeaderboardBtn.onclick = () => window.location.href = 'leaderboard.html';
+        };
+
+        overlayLeaderboardBtn.onclick = () => {
+          titleEl.textContent = '游戏结束';
+          msgEl.innerHTML = `最终分数：<b>${state.score}</b><br>当前体型：<b>${player.r.toFixed(1)}</b>`;
+          btn.textContent = '再来一局';
+          overlayLeaderboardBtn.textContent = '排行榜';
+          btn.onclick = startGame;
+          overlayLeaderboardBtn.onclick = () => window.location.href = 'leaderboard.html';
+        };
+      } else {
+        btn.textContent = '再来一局';
+        overlayLeaderboardBtn.textContent = '排行榜';
+        overlayLeaderboardBtn.style.display = 'inline-flex';
+        btn.onclick = startGame;
+        overlayLeaderboardBtn.onclick = () => window.location.href = 'leaderboard.html';
       }
+
+      overlay.classList.add('show');
     }
 
     function showNormalStartOverlay() {
@@ -836,9 +870,7 @@
       if (next) await requestLandscapeAndFullscreen();
     });
 
-    btn.addEventListener('click', () => {
-      startGame();
-    });
+    btn.onclick = startGame;
 
     if (!isTouchDevice) {
       modeBtn.style.display = 'none';
