@@ -191,7 +191,10 @@
 
         accounts.unshift({ username, password });
         saveAccounts(accounts);
-        renderSavedAccounts();
+    }
+
+    function renderSavedAccounts() {
+        // login 页面不显示保存账号列表，保留此函数避免历史调用错误
     }
 
     const savedUsername = sessionStorage.getItem('registerUsername');
