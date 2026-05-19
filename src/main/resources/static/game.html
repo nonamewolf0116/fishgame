@@ -1,0 +1,851 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>大鱼吃小鱼</title>
+  <style>
+    :root {
+      --bg1: #081826;
+      --bg2: #123a58;
+      --panel: rgba(255, 255, 255, 0.12);
+      --text: #eaf7ff;
+      --accent: #ffd166;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 20% 15%, #2f7aa5 0%, var(--bg2) 40%, var(--bg1) 100%);
+    }
+
+    #game {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      cursor: crosshair;
+    }
+
+    .hud {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: var(--panel);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 14px;
+      user-select: none;
+      z-index: 20;
+    }
+
+    .tag {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      white-space: nowrap;
+    }
+
+    .help {
+      position: fixed;
+      right: 12px;
+      top: 64px;
+      max-width: 320px;
+      line-height: 1.45;
+      font-size: 13px;
+      background: var(--panel);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 10px 12px;
+      user-select: none;
+      z-index: 20;
+    }
+
+    .mobile-tools {
+      position: fixed;
+      right: 12px;
+      bottom: 12px;
+      display: flex;
+      gap: 8px;
+      z-index: 30;
+    }
+
+    .mode-btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #12212f;
+      background: linear-gradient(135deg, #ffd166 0%, #fcbf49 100%);
+      cursor: pointer;
+    }
+
+    .mode-btn.active {
+      background: linear-gradient(135deg, #b8ffd9 0%, #7fffd4 100%);
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.42);
+      text-align: center;
+      padding: 20px;
+      z-index: 40;
+    }
+
+    .overlay.show { display: flex; }
+
+    .card {
+      min-width: 280px;
+      max-width: 420px;
+      padding: 22px;
+      border-radius: 14px;
+      background: rgba(9, 29, 46, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 26px;
+      letter-spacing: 1px;
+    }
+
+    p { margin: 8px 0; }
+
+    button {
+      margin-top: 12px;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #2c2200;
+      background: linear-gradient(135deg, #ffd166 0%, #fcbf49 100%);
+      cursor: pointer;
+    }
+
+    button:hover { filter: brightness(1.05); }
+
+    .card-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .secondary-btn {
+      color: #ffd166;
+      background: rgba(3, 22, 42, 0.72);
+      border: 1px solid rgba(255, 209, 102, 0.58);
+    }
+
+    .joystick {
+      position: fixed;
+      left: 16px;
+      bottom: 18px;
+      width: 126px;
+      height: 126px;
+      border-radius: 50%;
+      z-index: 35;
+      touch-action: none;
+      display: none;
+      user-select: none;
+    }
+
+    .joystick.show { display: block; }
+
+    .stick-base {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(2px);
+    }
+
+    .stick {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 54px;
+      height: 54px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: rgba(255, 209, 102, 0.95);
+      border: 2px solid rgba(255, 255, 255, 0.72);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+    }
+
+    @media (max-width: 900px) {
+      .hud {
+        top: 8px;
+        left: 8px;
+        padding: 7px 8px;
+        gap: 6px;
+        font-size: 12px;
+      }
+
+      .help {
+        top: 56px;
+        right: 8px;
+        max-width: min(58vw, 250px);
+        font-size: 12px;
+        line-height: 1.4;
+        padding: 8px 9px;
+      }
+
+      .mobile-tools {
+        right: 8px;
+        bottom: 8px;
+      }
+
+      .mode-btn {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+    }
+
+    @media (orientation: portrait) and (max-width: 900px) {
+      body.mobile-mode .help::after {
+        content: "\A建议切到横屏体验转盘控制";
+        white-space: pre;
+        color: #ffd166;
+      }
+    }
+
+    .leaderboard-btn {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 20;
+      height: 40px;
+      padding: 0 16px;
+      border: 1px solid rgba(255, 209, 102, 0.6);
+      border-radius: 6px;
+      color: #ffd166;
+      background: rgba(3, 22, 42, 0.72);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .leaderboard-btn:hover {
+      background: rgba(8, 38, 70, 0.86);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <button id="leaderboardBtn" class="leaderboard-btn" type="button">排行榜</button>
+
+  <div class="hud">
+    <div class="tag">分数：<span id="score">0</span></div>
+    <div class="tag">体型：<span id="size">22</span></div>
+    <div class="tag">等级：<span id="level">1</span></div>
+    <div class="tag">血量：<span id="lives">♥♥♥</span></div>
+  </div>
+
+  <div class="help" id="help">
+    鼠标/触摸/键盘（W/A/S/D、方向键）控制大鱼。<br>
+    手机可点右下角进入“横屏+转盘”模式。<br>
+    小鱼为原创矢量素材风格，支持免费非商用使用。
+  </div>
+
+  <div class="mobile-tools">
+    <button id="modeBtn" class="mode-btn" type="button">横屏+转盘：关</button>
+  </div>
+
+  <div id="joystick" class="joystick" aria-hidden="true">
+    <div class="stick-base"></div>
+    <div id="stick" class="stick"></div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="card">
+      <h1 id="title">大鱼吃小鱼</h1>
+      <p id="msg">准备好开始了吗？</p>
+      <div class="card-actions">
+        <button id="btn" type="button">开始游戏</button>
+        <button id="overlayLeaderboardBtn" class="secondary-btn" type="button">排行榜</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { uploadScore } from './js/api.js';
+
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const fishImage = new Image();
+    fishImage.src = './assets/fish.png';
+    const playerFishSprite = { x: 68, y: 332, width: 78, height: 64 };
+    const fishSprites = {
+      round: { x: 154, y: 12, width: 66, height: 65 },
+      stripe: { x: 388, y: 21, width: 74, height: 48 },
+      needle: { x: 714, y: 20, width: 66, height: 48 },
+      angel: { x: 230, y: 92, width: 74, height: 61 },
+      box: { x: 470, y: 105, width: 71, height: 42 },
+      puffer: { x: 233, y: 252, width: 68, height: 65 },
+      koi: { x: 470, y: 332, width: 72, height: 61 },
+      manta: { x: 548, y: 180, width: 74, height: 50 },
+      dart: { x: 230, y: 505, width: 71, height: 41 },
+      shark: { x: 629, y: 580, width: 75, height: 48 }
+    };
+
+    const scoreEl = document.getElementById('score');
+    const sizeEl = document.getElementById('size');
+    const levelEl = document.getElementById('level');
+    const livesEl = document.getElementById('lives');
+    const leaderboardBtn = document.getElementById('leaderboardBtn');
+    const overlayLeaderboardBtn = document.getElementById('overlayLeaderboardBtn');
+    const overlay = document.getElementById('overlay');
+    const titleEl = document.getElementById('title');
+    const msgEl = document.getElementById('msg');
+    const btn = document.getElementById('btn');
+    const modeBtn = document.getElementById('modeBtn');
+    const joystickEl = document.getElementById('joystick');
+    const stickEl = document.getElementById('stick');
+
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window);
+    const fishTypes = ['round', 'stripe', 'needle', 'angel', 'box', 'puffer', 'koi', 'manta', 'dart'];
+
+    const state = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      running: false,
+      score: 0,
+      lives: 3,
+      invincibleUntil: 0,
+      spawnTick: 0,
+      targetX: window.innerWidth * 0.5,
+      targetY: window.innerHeight * 0.5,
+      fish: [],
+      bubbles: [],
+      mobileMode: false,
+      joystick: {
+        engaged: false,
+        pointerId: null,
+        inputX: 0,
+        inputY: 0,
+        maxRadius: 42
+      },
+      keys: {
+        w: false,
+        a: false,
+        s: false,
+        d: false,
+        arrowup: false,
+        arrowleft: false,
+        arrowdown: false,
+        arrowright: false
+      }
+    };
+
+    leaderboardBtn.addEventListener('click', () => {
+      window.location.href = 'leaderboard.html';
+    });
+
+    overlayLeaderboardBtn.addEventListener('click', () => {
+      window.location.href = 'leaderboard.html';
+    });
+
+    const player = {
+      x: state.width * 0.5,
+      y: state.height * 0.5,
+      r: 22,
+      speed: 2.5,
+      color: '#ffe08a'
+    };
+
+    function resize() {
+      state.width = window.innerWidth;
+      state.height = window.innerHeight;
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = Math.floor(state.width * dpr);
+      canvas.height = Math.floor(state.height * dpr);
+      canvas.style.width = state.width + 'px';
+      canvas.style.height = state.height + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function rand(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function dist(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function clamp(v, min, max) {
+      return Math.max(min, Math.min(max, v));
+    }
+
+    function spawnFish() {
+      if (!state.running) return;
+      const maxFishOnScreen = 12;
+      if (state.fish.length >= maxFishOnScreen) return;
+
+      const side = Math.floor(Math.random() * 4);
+      const spawnShark = state.score >= 350 && Math.random() < 0.18;
+      const minR = spawnShark ? player.r * 0.9 : Math.max(7, player.r * 0.28);
+      const maxR = spawnShark ? player.r * 1.15 : Math.max(14, player.r * 1.08);
+      const r = rand(minR, maxR);
+      const speed = clamp(rand(0.45, 0.95) * (24 / Math.max(18, r)), 0.38, 0.95);
+      const drift = clamp(speed * 0.45, 0.16, 0.34);
+      let x;
+      let y;
+      let vx;
+      let vy;
+
+      if (side === 0) {
+        x = -r;
+        y = rand(0, state.height);
+        vx = speed;
+        vy = rand(-drift, drift);
+      } else if (side === 1) {
+        x = state.width + r;
+        y = rand(0, state.height);
+        vx = -speed;
+        vy = rand(-drift, drift);
+      } else if (side === 2) {
+        x = rand(0, state.width);
+        y = -r;
+        vx = rand(-drift, drift);
+        vy = speed;
+      } else {
+        x = rand(0, state.width);
+        y = state.height + r;
+        vx = rand(-drift, drift);
+        vy = -speed;
+      }
+
+      state.fish.push({
+        x,
+        y,
+        r,
+        vx,
+        vy,
+        hue: Math.floor(rand(0, 360)),
+        wiggle: rand(0, Math.PI * 2),
+        type: spawnShark ? 'shark' : fishTypes[Math.floor(rand(0, fishTypes.length))]
+      });
+    }
+
+    function spawnBubble() {
+      if (state.bubbles.length > 60) return;
+      state.bubbles.push({
+        x: rand(0, state.width),
+        y: state.height + rand(0, 150),
+        r: rand(1.5, 5),
+        vy: rand(0.3, 1.3),
+        alpha: rand(0.15, 0.45)
+      });
+    }
+
+    function movePlayer() {
+      const s = player.speed * (24 / Math.max(16, player.r));
+      const joy = state.joystick;
+
+      if (state.mobileMode && (Math.abs(joy.inputX) > 0.01 || Math.abs(joy.inputY) > 0.01)) {
+        player.x += joy.inputX * s;
+        player.y += joy.inputY * s;
+        state.targetX = player.x;
+        state.targetY = player.y;
+      } else {
+        const left = state.keys.a || state.keys.arrowleft;
+        const right = state.keys.d || state.keys.arrowright;
+        const up = state.keys.w || state.keys.arrowup;
+        const down = state.keys.s || state.keys.arrowdown;
+        const hasKeyboardInput = left || right || up || down;
+
+        if (hasKeyboardInput) {
+          let inputX = (right ? 1 : 0) - (left ? 1 : 0);
+          let inputY = (down ? 1 : 0) - (up ? 1 : 0);
+          const inputLen = Math.hypot(inputX, inputY);
+          if (inputLen > 0) {
+            inputX /= inputLen;
+            inputY /= inputLen;
+            player.x += inputX * s;
+            player.y += inputY * s;
+            state.targetX = player.x;
+            state.targetY = player.y;
+          }
+        } else {
+          const dx = state.targetX - player.x;
+          const dy = state.targetY - player.y;
+          const d = Math.hypot(dx, dy);
+          if (d > 0.1) {
+            player.x += (dx / d) * Math.min(d, s);
+            player.y += (dy / d) * Math.min(d, s);
+          }
+        }
+      }
+
+      player.x = clamp(player.x, player.r, state.width - player.r);
+      player.y = clamp(player.y, player.r, state.height - player.r);
+    }
+
+    function updateFish() {
+      for (let i = state.fish.length - 1; i >= 0; i--) {
+        const f = state.fish[i];
+        f.x += f.vx;
+        f.y += f.vy;
+        f.wiggle += 0.12;
+
+        if (f.x < -100 || f.x > state.width + 100 || f.y < -100 || f.y > state.height + 100) {
+          state.fish.splice(i, 1);
+          continue;
+        }
+
+        const hit = dist(player, f) <= player.r + f.r;
+        if (!hit) continue;
+
+        if (player.r >= f.r * 1.02) {
+          state.score += scoreForFish(f);
+          const area = player.r * player.r + f.r * f.r * 0.08;
+          player.r = Math.min(110, Math.sqrt(area));
+          state.fish.splice(i, 1);
+        } else if (performance.now() >= state.invincibleUntil) {
+          state.lives -= 1;
+          state.invincibleUntil = performance.now() + 900;
+          renderHud();
+          if (state.lives <= 0) {
+            endGame();
+            return;
+          }
+        }
+      }
+    }
+
+    function scoreForFish(f) {
+      if (f.type === 'shark') {
+        return Math.max(12, Math.floor(f.r / 3));
+      }
+      return Math.max(1, Math.floor((f.r - 7) / 8) + 1);
+    }
+
+    function updateBubbles() {
+      for (let i = state.bubbles.length - 1; i >= 0; i--) {
+        const b = state.bubbles[i];
+        b.y -= b.vy;
+        if (b.y < -20) state.bubbles.splice(i, 1);
+      }
+    }
+
+    function drawNpcFish(f) {
+      const facing = f.vx >= 0 ? 1 : -1;
+      const r = f.r;
+
+      ctx.save();
+      ctx.translate(f.x, f.y);
+      if (facing < 0) ctx.scale(-1, 1);
+      drawSpriteFish(fishSprites[f.type] || fishSprites.round, r * 2.9, r * 1.8);
+      ctx.restore();
+    }
+
+    function drawPlayerFish() {
+      const keyboardDirX = (state.keys.d || state.keys.arrowright ? 1 : 0)
+        - (state.keys.a || state.keys.arrowleft ? 1 : 0);
+      const dirX = keyboardDirX !== 0
+        ? keyboardDirX
+        : state.mobileMode && Math.abs(state.joystick.inputX) > 0.05
+          ? state.joystick.inputX
+          : state.targetX - player.x;
+      const facing = dirX >= 0 ? 1 : -1;
+      const r = player.r;
+
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      if (facing < 0) ctx.scale(-1, 1);
+      drawSpriteFish(playerFishSprite, r * 2.8, r * 2.25);
+      ctx.restore();
+    }
+
+    function drawSpriteFish(sprite, width, height) {
+      if (!fishImage.complete) return;
+      ctx.drawImage(
+        fishImage,
+        sprite.x,
+        sprite.y,
+        sprite.width,
+        sprite.height,
+        -width / 2,
+        -height / 2,
+        width,
+        height
+      );
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, state.width, state.height);
+
+      for (const b of state.bubbles) {
+        ctx.fillStyle = `rgba(214,245,255,${b.alpha})`;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      for (const f of state.fish) {
+        drawNpcFish(f);
+      }
+
+      drawPlayerFish();
+    }
+
+    function level() {
+      return 1 + Math.floor(state.score / 120);
+    }
+
+    function renderHud() {
+      scoreEl.textContent = String(state.score);
+      sizeEl.textContent = player.r.toFixed(1);
+      levelEl.textContent = String(level());
+      livesEl.textContent = '♥'.repeat(Math.max(0, state.lives));
+    }
+
+    function resetGame() {
+      state.score = 0;
+      state.lives = 3;
+      state.invincibleUntil = 0;
+      state.spawnTick = 0;
+      state.fish = [];
+      state.bubbles = [];
+      Object.keys(state.keys).forEach((key) => { state.keys[key] = false; });
+      resetJoystick();
+      player.r = 22;
+      player.x = state.width * 0.5;
+      player.y = state.height * 0.5;
+      state.targetX = player.x;
+      state.targetY = player.y;
+      renderHud();
+    }
+
+    function startGame() {
+      resetGame();
+      state.running = true;
+      overlay.classList.remove('show');
+    }
+
+    function endGame() {
+      state.running = false;
+      titleEl.textContent = '游戏结束';
+      msgEl.innerHTML = `最终分数：<b>${state.score}</b><br>当前体型：<b>${player.r.toFixed(1)}</b>`;
+      btn.textContent = '再来一局';
+      overlay.classList.add('show');
+
+      const token = localStorage.getItem('token');
+      if (token && confirm('是否上传分数？')) {
+        uploadScore(state.score)
+          .then(() => {
+            alert('分数上传成功');
+          })
+          .catch(() => {
+            alert('上传失败');
+          });
+      }
+    }
+
+    function showNormalStartOverlay() {
+      titleEl.textContent = '大鱼吃小鱼';
+      msgEl.textContent = '准备好开始了吗？';
+      btn.textContent = '开始游戏';
+      overlay.classList.add('show');
+    }
+
+    function loop() {
+      if (state.running) {
+        state.spawnTick -= 1;
+        if (state.spawnTick <= 0) {
+          spawnFish();
+          state.spawnTick = Math.max(16, Math.floor(rand(34, 58) - level() * 1.4));
+        }
+        if (Math.random() < 0.35) spawnBubble();
+
+        movePlayer();
+        updateFish();
+        updateBubbles();
+        renderHud();
+      } else {
+        updateBubbles();
+        if (Math.random() < 0.2) spawnBubble();
+      }
+
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    function setTarget(clientX, clientY) {
+      state.targetX = clamp(clientX, 0, state.width);
+      state.targetY = clamp(clientY, 0, state.height);
+    }
+
+    function resetJoystick() {
+      state.joystick.engaged = false;
+      state.joystick.pointerId = null;
+      state.joystick.inputX = 0;
+      state.joystick.inputY = 0;
+      stickEl.style.transform = 'translate(-50%, -50%)';
+    }
+
+    function updateJoystickFromPoint(clientX, clientY) {
+      const rect = joystickEl.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = clientX - cx;
+      const dy = clientY - cy;
+      const d = Math.hypot(dx, dy);
+      const maxR = state.joystick.maxRadius;
+
+      let nx = 0;
+      let ny = 0;
+      let drawX = 0;
+      let drawY = 0;
+
+      if (d > 0.0001) {
+        const use = Math.min(d, maxR);
+        nx = dx / d;
+        ny = dy / d;
+        drawX = nx * use;
+        drawY = ny * use;
+      }
+
+      state.joystick.inputX = drawX / maxR;
+      state.joystick.inputY = drawY / maxR;
+      stickEl.style.transform = `translate(calc(-50% + ${drawX}px), calc(-50% + ${drawY}px))`;
+    }
+
+    function setMobileMode(on) {
+      state.mobileMode = on;
+      document.body.classList.toggle('mobile-mode', on);
+      modeBtn.classList.toggle('active', on);
+      modeBtn.textContent = on ? '横屏+转盘：开' : '横屏+转盘：关';
+      joystickEl.classList.toggle('show', on);
+      if (!on) resetJoystick();
+    }
+
+    async function requestLandscapeAndFullscreen() {
+      try {
+        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen();
+        }
+      } catch (e) {
+      }
+
+      try {
+        if (screen.orientation && screen.orientation.lock) {
+          await screen.orientation.lock('landscape');
+        }
+      } catch (e) {
+      }
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      if (!state.mobileMode) setTarget(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      if (!t) return;
+      if (state.mobileMode) return;
+      setTarget(t.clientX, t.clientY);
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      const t = e.touches[0];
+      if (!t) return;
+      if (state.mobileMode) return;
+      setTarget(t.clientX, t.clientY);
+    }, { passive: true });
+
+    window.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      if (Object.prototype.hasOwnProperty.call(state.keys, key)) {
+        state.keys[key] = true;
+      }
+      if (key.startsWith('arrow')) {
+        e.preventDefault();
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const key = e.key.toLowerCase();
+      if (Object.prototype.hasOwnProperty.call(state.keys, key)) {
+        state.keys[key] = false;
+      }
+    });
+
+    joystickEl.addEventListener('pointerdown', (e) => {
+      if (!state.mobileMode) return;
+      state.joystick.engaged = true;
+      state.joystick.pointerId = e.pointerId;
+      joystickEl.setPointerCapture(e.pointerId);
+      updateJoystickFromPoint(e.clientX, e.clientY);
+      e.preventDefault();
+    });
+
+    joystickEl.addEventListener('pointermove', (e) => {
+      if (!state.mobileMode) return;
+      if (!state.joystick.engaged || state.joystick.pointerId !== e.pointerId) return;
+      updateJoystickFromPoint(e.clientX, e.clientY);
+      e.preventDefault();
+    });
+
+    function releaseJoystick(e) {
+      if (!state.joystick.engaged || state.joystick.pointerId !== e.pointerId) return;
+      resetJoystick();
+    }
+
+    joystickEl.addEventListener('pointerup', releaseJoystick);
+    joystickEl.addEventListener('pointercancel', releaseJoystick);
+    joystickEl.addEventListener('pointerleave', releaseJoystick);
+
+    window.addEventListener('blur', () => {
+      Object.keys(state.keys).forEach((key) => { state.keys[key] = false; });
+      resetJoystick();
+    });
+
+    window.addEventListener('resize', resize);
+
+    modeBtn.addEventListener('click', async () => {
+      const next = !state.mobileMode;
+      setMobileMode(next);
+      if (next) await requestLandscapeAndFullscreen();
+    });
+
+    btn.addEventListener('click', () => {
+      startGame();
+    });
+
+    if (!isTouchDevice) {
+      modeBtn.style.display = 'none';
+    }
+    setMobileMode(false);
+    showNormalStartOverlay();
+    resize();
+    renderHud();
+    loop();
+  </script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深海鱼战 - 排行榜</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, "Microsoft YaHei", sans-serif;
+            color: #eaf6ff;
+            background:
+                    radial-gradient(circle at 18% 16%, rgba(70, 155, 215, 0.26), transparent 28%),
+                    radial-gradient(circle at 82% 82%, rgba(255, 209, 102, 0.12), transparent 24%),
+                    linear-gradient(180deg, #06213f 0%, #020b18 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .panel {
+            width: min(760px, 100%);
+            border: 1px solid rgba(150, 215, 255, 0.24);
+            border-radius: 8px;
+            background: rgba(3, 22, 42, 0.84);
+            box-shadow: 0 20px 55px rgba(0, 0, 0, 0.38);
+            overflow: hidden;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 24px;
+            border-bottom: 1px solid rgba(150, 215, 255, 0.18);
+        }
+
+        h1 {
+            margin: 0;
+            color: #ffd166;
+            font-size: 28px;
+            letter-spacing: 0;
+        }
+
+        .subtitle {
+            margin: 6px 0 0;
+            color: #9fc9e8;
+            font-size: 14px;
+        }
+
+        button {
+            height: 40px;
+            padding: 0 18px;
+            border: 0;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #09213d;
+            background: #ffd166;
+            font-size: 15px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            background: #ffdc85;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(150, 215, 255, 0.12);
+        }
+
+        th {
+            color: #9fc9e8;
+            font-size: 13px;
+            font-weight: 700;
+            background: rgba(1, 13, 26, 0.42);
+        }
+
+        td {
+            font-size: 15px;
+        }
+
+        .rank {
+            width: 90px;
+            color: #ffd166;
+            font-weight: 700;
+        }
+
+        .score {
+            text-align: right;
+            font-weight: 700;
+        }
+
+        .message {
+            padding: 34px 24px;
+            text-align: center;
+            color: #9fc9e8;
+        }
+
+        @media (max-width: 560px) {
+            body {
+                padding: 14px;
+            }
+
+            .header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            th,
+            td {
+                padding: 12px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="panel">
+    <div class="header">
+        <div>
+            <h1>深海排行榜</h1>
+            <p class="subtitle">Top 20 大鱼猎手</p>
+        </div>
+        <button id="backBtn" type="button">返回游戏</button>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>排名</th>
+            <th>用户名</th>
+            <th class="score">分数</th>
+        </tr>
+        </thead>
+        <tbody id="leaderboardBody">
+        <tr>
+            <td class="message" colspan="3">加载中...</td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+
+<script type="module">
+    import { getLeaderboard } from './js/api.js';
+
+    const tbody = document.getElementById('leaderboardBody');
+    const backBtn = document.getElementById('backBtn');
+
+    backBtn.addEventListener('click', () => {
+        window.location.href = 'game.html';
+    });
+
+    async function loadLeaderboard() {
+        try {
+            const result = await getLeaderboard();
+            const list = result.data || [];
+
+            if (!result.success) {
+                throw new Error(result.message || '获取排行榜失败');
+            }
+
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td class="message" colspan="3">暂无排行榜数据</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = list.slice(0, 20).map((item, index) => `
+                <tr>
+                    <td class="rank">#${index + 1}</td>
+                    <td>${escapeHtml(item.username || '')}</td>
+                    <td class="score">${item.score ?? 0}</td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            tbody.innerHTML = `<tr><td class="message" colspan="3">${escapeHtml(err.message || '获取排行榜失败')}</td></tr>`;
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+
+    loadLeaderboard();
+</script>
+</body>
+</html>
