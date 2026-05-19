@@ -464,10 +464,12 @@
     }
 
     function movePlayer() {
-      const s = player.speed * clamp(24 / Math.max(24, player.r), 0.8, 1);
+      const baseSpeed = player.speed * clamp(24 / Math.max(24, player.r), 0.8, 1);
+      const joystickScale = state.mobileMode ? 0.88 : 1;
+      const s = baseSpeed * joystickScale;
       const joy = state.joystick;
 
-      if (state.mobileMode && (Math.abs(joy.inputX) > 0.01 || Math.abs(joy.inputY) > 0.01)) {
+      if (state.mobileMode && (Math.abs(joy.inputX) > 0.05 || Math.abs(joy.inputY) > 0.05)) {
         player.x += joy.inputX * s;
         player.y += joy.inputY * s;
         state.targetX = player.x;
@@ -731,8 +733,8 @@
         drawY = ny * use;
       }
 
-      state.joystick.inputX = drawX / maxR;
-      state.joystick.inputY = drawY / maxR;
+      state.joystick.inputX = Math.max(-1, Math.min(1, drawX / maxR));
+      state.joystick.inputY = Math.max(-1, Math.min(1, drawY / maxR));
       stickEl.style.transform = `translate(calc(-50% + ${drawX}px), calc(-50% + ${drawY}px))`;
     }
 
