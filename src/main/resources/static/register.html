@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深海鱼战 - 注册</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, "Microsoft YaHei", sans-serif;
+            color: #eaf6ff;
+            background:
+                    radial-gradient(circle at 20% 15%, rgba(74, 160, 210, 0.28), transparent 28%),
+                    radial-gradient(circle at 80% 85%, rgba(255, 209, 102, 0.12), transparent 24%),
+                    linear-gradient(180deg, #06213f 0%, #03101f 100%);
+            overflow: hidden;
+        }
+
+        .login-box {
+            width: min(360px, calc(100vw - 32px));
+            padding: 34px 28px 28px;
+            border: 1px solid rgba(150, 215, 255, 0.22);
+            border-radius: 8px;
+            background: rgba(3, 22, 42, 0.82);
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.38);
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            text-align: center;
+            font-size: 28px;
+            letter-spacing: 0;
+            color: #ffd166;
+        }
+
+        .subtitle {
+            margin: 0 0 26px;
+            text-align: center;
+            font-size: 14px;
+            color: #9fc9e8;
+        }
+
+        label {
+            display: block;
+            margin: 14px 0 7px;
+            font-size: 14px;
+            color: #c8e8ff;
+        }
+
+        input {
+            width: 100%;
+            height: 44px;
+            padding: 0 13px;
+            border: 1px solid rgba(159, 201, 232, 0.36);
+            border-radius: 6px;
+            outline: none;
+            color: #ffffff;
+            background: rgba(1, 13, 26, 0.72);
+            font-size: 15px;
+        }
+
+        input:focus {
+            border-color: #ffd166;
+            box-shadow: 0 0 0 3px rgba(255, 209, 102, 0.16);
+        }
+
+        button {
+            width: 100%;
+            height: 44px;
+            margin-top: 22px;
+            border: 0;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #09213d;
+            background: #ffd166;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        button:hover {
+            background: #ffdc85;
+        }
+
+        .link {
+            margin-top: 18px;
+            text-align: center;
+            font-size: 14px;
+            color: #9fc9e8;
+        }
+
+        .link a {
+            color: #ffd166;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .fish {
+            position: fixed;
+            color: rgba(255, 255, 255, 0.18);
+            font-size: 42px;
+            pointer-events: none;
+        }
+
+        .fish.one {
+            left: 10%;
+            top: 18%;
+        }
+
+        .fish.two {
+            right: 12%;
+            bottom: 16%;
+            transform: scaleX(-1);
+        }
+    </style>
+</head>
+<body>
+<div class="fish one">&gt;&lt;&gt;</div>
+<div class="fish two">&gt;&lt;&gt;</div>
+
+<main class="login-box">
+    <h1>深海鱼战</h1>
+    <p class="subtitle">注册一个新账号，开始你的海底冒险</p>
+
+    <form id="registerForm">
+        <label for="username">用户名</label>
+        <input id="username" type="text" autocomplete="username" required>
+
+        <label for="password">密码</label>
+        <input id="password" type="password" autocomplete="new-password" required>
+
+        <button type="submit">注册</button>
+    </form>
+
+    <div class="link">
+        已有账号？<a href="login.html">去登录</a>
+    </div>
+</main>
+
+<script type="module">
+    import { register } from './js/api.js';
+
+    const form = document.getElementById('registerForm');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        if (!username || !password) {
+            alert('用户名和密码不能为空');
+            return;
+        }
+
+        try {
+            const result = await register(username, password);
+
+            if (result.data && result.data.token) {
+                localStorage.setItem('token', result.data.token);
+                localStorage.setItem('username', result.data.username);
+            }
+
+            alert(result.message || '注册成功');
+            window.location.href = 'game.html';
+        } catch (err) {
+            alert(err.message || '注册失败');
+        }
+    });
+</script>
+</body>
+</html>
