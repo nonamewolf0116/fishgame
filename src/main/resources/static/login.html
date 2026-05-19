@@ -109,6 +109,37 @@
             text-align: center;
         }
 
+        .account-list {
+            margin-top: 16px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .account-item {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid rgba(159, 201, 232, 0.36);
+            border-radius: 6px;
+            background: rgba(1, 13, 26, 0.75);
+            color: #eaf6ff;
+            text-align: left;
+            font-size: 14px;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .account-item:hover {
+            border-color: #ffd166;
+            background: rgba(3, 22, 42, 0.9);
+        }
+
+        .account-hint {
+            margin-top: 10px;
+            color: #9fc9e8;
+            font-size: 13px;
+            text-align: center;
+        }
+
         .fish {
             position: fixed;
             color: rgba(255, 255, 255, 0.18);
@@ -146,6 +177,7 @@
         <button type="submit">登录</button>
     </form>
     <div id="message" class="message"></div>
+    <div id="accountList" class="account-list"></div>
 
     <div class="link">
         没有账号？<a href="register.html">去注册</a>
@@ -159,11 +191,70 @@
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const messageEl = document.getElementById('message');
+    const accountList = document.getElementById('accountList');
+    const MAX_SAVED_ACCOUNTS = 3;
 
     function setMessage(text, type = 'info') {
         messageEl.textContent = text;
         messageEl.style.color = type === 'error' ? '#ff8c8c' : '#a8ffb9';
     }
+
+    function loadSavedAccounts() {
+        try {
+            return JSON.parse(localStorage.getItem('savedAccounts')) || [];
+        } catch (err) {
+            return [];
+        }
+    }
+
+    function saveAccounts(accounts) {
+        localStorage.setItem('savedAccounts', JSON.stringify(accounts.slice(0, MAX_SAVED_ACCOUNTS)));
+    }
+
+    function saveAccount(username, password) {
+        if (!username || !password) {
+            return;
+        }
+
+        const accounts = loadSavedAccounts();
+        const existingIndex = accounts.findIndex((item) => item.username === username);
+        if (existingIndex !== -1) {
+            accounts.splice(existingIndex, 1);
+        }
+
+        accounts.unshift({ username, password });
+        saveAccounts(accounts);
+        renderSavedAccounts();
+    }
+
+    function renderSavedAccounts() {
+        const accounts = loadSavedAccounts();
+        if (accounts.length === 0) {
+            accountList.innerHTML = '<div class="account-hint">最多保存 3 个账号，点击即可快速切换。</div>';
+            return;
+        }
+
+        accountList.innerHTML = accounts.map((account) => `
+            <button type="button" class="account-item" data-username="${account.username}">
+                ${account.username}
+            </button>
+        `).join('');
+    }
+
+    accountList.addEventListener('click', (event) => {
+        const button = event.target.closest('.account-item');
+        if (!button) {
+            return;
+        }
+
+        const username = button.dataset.username || '';
+        const accounts = loadSavedAccounts();
+        const account = accounts.find((item) => item.username === username);
+
+        usernameInput.value = account?.username || '';
+        passwordInput.value = account?.password || '';
+        setMessage('已填写已保存账号，直接登录即可。', 'info');
+    });
 
     const savedUsername = sessionStorage.getItem('registerUsername');
     const savedPassword = sessionStorage.getItem('registerPassword');
@@ -174,6 +265,8 @@
         sessionStorage.removeItem('registerPassword');
         setMessage('已填写注册信息，请登录。', 'success');
     }
+
+    renderSavedAccounts();
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -188,6 +281,7 @@
 
         try {
             await login(username, password);
+            saveAccount(username, password);
             setMessage('登录成功，正在进入游戏...', 'success');
             setTimeout(() => {
                 window.location.href = 'game.html';
