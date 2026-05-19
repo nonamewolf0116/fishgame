@@ -233,11 +233,15 @@
       }
     }
 
+    .leaderboard-btn,
+    .logout-btn {
+      z-index: 18;
+    }
+
     .leaderboard-btn {
       position: fixed;
       top: 18px;
       right: 18px;
-      z-index: 20;
       height: 40px;
       padding: 0 16px;
       border: 1px solid rgba(255, 209, 102, 0.6);
@@ -256,9 +260,8 @@
 
     .logout-btn {
       position: fixed;
-      top: 18px;
-      left: 18px;
-      z-index: 20;
+      right: 18px;
+      bottom: 68px;
       height: 40px;
       padding: 0 16px;
       border: 1px solid rgba(255, 109, 106, 0.75);
@@ -273,6 +276,52 @@
 
     .logout-btn:hover {
       background: rgba(64, 12, 24, 0.9);
+    }
+
+    .account-panel {
+      margin: 18px 0 0;
+      text-align: left;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .account-panel label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: #ffd166;
+    }
+
+    .account-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .account-row select,
+    .account-row button {
+      min-height: 42px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      font-size: 14px;
+    }
+
+    .account-row select {
+      width: 100%;
+      padding: 0 12px;
+      color: #f3f8ff;
+      background: rgba(1, 11, 20, 0.85);
+      outline: none;
+    }
+
+    .account-hint {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #c4e7ff;
+      line-height: 1.45;
     }
   </style>
 </head>
@@ -306,6 +355,16 @@
     <div class="card">
       <h1 id="title">大鱼吃小鱼</h1>
       <p id="msg">准备好开始了吗？</p>
+          <div class="account-panel" id="accountPanel">
+        <label for="accountSelect">快速切换账号</label>
+        <div class="account-row">
+          <select id="accountSelect">
+            <option value="">选择已保存账号</option>
+          </select>
+          <button id="accountSwitchBtn" class="secondary-btn" type="button" disabled>登录</button>
+        </div>
+        <p id="accountHint" class="account-hint">如果已保存账号，可在此直接登录后开始游戏。</p>
+      </div>
       <div class="card-actions">
         <button id="btn" type="button">开始游戏</button>
         <button id="overlayLeaderboardBtn" class="secondary-btn" type="button">排行榜</button>
@@ -314,7 +373,7 @@
   </div>
 
   <script type="module">
-    import { uploadScore } from './js/api.js';
+    import { uploadScore, login } from './js/api.js';
 
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
@@ -339,6 +398,10 @@
     const livesEl = document.getElementById('lives');
     const leaderboardBtn = document.getElementById('leaderboardBtn');
     const logoutBtn = document.getElementById('logoutBtn');
+    const accountPanel = document.getElementById('accountPanel');
+    const accountSelect = document.getElementById('accountSelect');
+    const accountSwitchBtn = document.getElementById('accountSwitchBtn');
+    const accountHint = document.getElementById('accountHint');
     const overlayLeaderboardBtn = document.getElementById('overlayLeaderboardBtn');
     const overlay = document.getElementById('overlay');
     const titleEl = document.getElementById('title');
@@ -393,6 +456,40 @@
       window.location.href = 'login.html';
     });
 
+    accountSelect.addEventListener('change', () => {
+      accountSwitchBtn.disabled = !accountSelect.value;
+      if (accountSelect.value) {
+        accountHint.textContent = `准备登录：${accountSelect.value}`;
+      } else {
+        const active = localStorage.getItem('username');
+        accountHint.textContent = active
+          ? `当前账号：${active}。选择已保存账号即可快速切换。`
+          : '如果已保存账号，可在此直接登录后开始游戏。';
+      }
+    });
+
+    accountSwitchBtn.addEventListener('click', async () => {
+      const selected = accountSelect.value;
+      if (!selected) return;
+      const savedAccounts = loadSavedAccounts();
+      const account = savedAccounts.find((item) => item.username === selected);
+      if (!account) {
+        accountHint.textContent = '未找到已保存账号，请在登录页重新登录一次。';
+        return;
+      }
+
+      accountSwitchBtn.disabled = true;
+      accountHint.textContent = `正在登录 ${selected}...`;
+      try {
+        await login(account.username, account.password);
+        accountHint.textContent = `已登录：${account.username}，现在可直接开始游戏。`;
+      } catch (err) {
+        accountHint.textContent = err.message || '登录失败，请检查账号信息。';
+      } finally {
+        accountSwitchBtn.disabled = false;
+      }
+    });
+
     overlayLeaderboardBtn.addEventListener('click', () => {
       window.location.href = 'leaderboard.html';
     });
@@ -414,6 +511,35 @@
       canvas.style.width = state.width + 'px';
       canvas.style.height = state.height + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function loadSavedAccounts() {
+      try {
+        return JSON.parse(localStorage.getItem('savedAccounts')) || [];
+      } catch (err) {
+        return [];
+      }
+    }
+
+    function renderAccountSwitcher() {
+      const accounts = loadSavedAccounts();
+      if (!accounts.length) {
+        accountPanel.style.display = 'none';
+        return;
+      }
+
+      accountPanel.style.display = 'block';
+      const currentUser = localStorage.getItem('username');
+      accountSelect.innerHTML = [
+        '<option value="">选择已保存账号</option>',
+        ...accounts.map((account) => `
+          <option value="${account.username}">${account.username}</option>
+        `)
+      ].join('');
+      accountSwitchBtn.disabled = true;
+      accountHint.textContent = currentUser
+        ? `当前账号：${currentUser}。选择已保存账号即可快速切换。`
+        : '如果已保存账号，可在此直接登录后开始游戏。';
     }
 
     function rand(min, max) {
@@ -712,12 +838,14 @@
         overlayLeaderboardBtn.disabled = false;
       }
 
+      renderAccountSwitcher();
       overlay.classList.add('show');
     }
 
     function showNormalStartOverlay() {
       titleEl.textContent = '大鱼吃小鱼';
       msgEl.textContent = '准备好开始了吗？';
+      renderAccountSwitcher();
       btn.textContent = '开始游戏';
       overlay.classList.add('show');
     }
