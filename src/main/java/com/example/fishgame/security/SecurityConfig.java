@@ -28,7 +28,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/login.html", "/register.html", "/game.html", "/leaderboard.html", "/", "/js/**", "/assets/**").permitAll()
-                        .requestMatchers("/api/login", "/api/register").permitAll()
+                        .requestMatchers("/api/login", "/api/register", "/api/leaderboard").permitAll()
                         .anyRequest().authenticated()
                 )
                 .build();

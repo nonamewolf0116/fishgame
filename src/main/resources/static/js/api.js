@@ -1,5 +1,27 @@
 const API_BASE_URL = "https://fishgame-production-2c91.up.railway.app/api";
 
+async function parseResponse(response) {
+    const text = await response.text();
+    let data = null;
+
+    if (text) {
+        try {
+            data = JSON.parse(text);
+        } catch (err) {
+            throw new Error(`请求失败: ${response.status} ${response.statusText}`);
+        }
+    }
+
+    if (!response.ok) {
+        if (data && data.message) {
+            throw new Error(data.message);
+        }
+        throw new Error(`请求失败: ${response.status} ${response.statusText}`);
+    }
+
+    return data;
+}
+
 async function request(path, options = {}) {
     const response = await fetch(`${API_BASE_URL}${path}`, {
         headers: {
@@ -9,7 +31,7 @@ async function request(path, options = {}) {
         ...options
     });
 
-    return response.json();
+    return parseResponse(response);
 }
 
 export async function register(username, password) {
@@ -47,7 +69,7 @@ export async function uploadScore(score) {
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username");
 
-    const result = await fetch(`${API_BASE_URL}/score`, {
+    const response = await fetch(`${API_BASE_URL}/score`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -57,7 +79,9 @@ export async function uploadScore(score) {
             username: username,
             score: score
         })
-    }).then(response => response.json());
+    });
+
+    const result = await parseResponse(response);
 
     if (!result.success) {
         throw new Error(result.message || "上传分数失败");
