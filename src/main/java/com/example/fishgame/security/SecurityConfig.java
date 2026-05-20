@@ -33,13 +33,12 @@ public HttpFirewall defaultHttpFirewall() {
         return http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-    .requestMatchers("/login.html", "/register.html", "/game.html",
-                     "/leaderboard.html", "/", "/js/**", "/assets/**", "/music/**").permitAll()
-    .requestMatchers("/api/login", "/api/register", "/api/leaderboard").permitAll()
-    .anyRequest().authenticated()
-)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/login.html", "/register.html", "/game.html", "/leaderboard.html", "/", "/js/**", "/assets/**", "/music/**").permitAll()
+                        .requestMatchers("/api/login", "/api/register", "/api/leaderboard").permitAll()
+                        .anyRequest().authenticated()
+                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

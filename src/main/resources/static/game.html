@@ -35,7 +35,7 @@
 
     .hud {
       position: fixed;
-      top: 12px;
+      top: 68px;
       left: 12px;
       display: flex;
       gap: 8px;
@@ -48,6 +48,42 @@
       font-size: 14px;
       user-select: none;
       z-index: 20;
+    }
+
+    .top-actions {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      display: flex;
+      gap: 8px;
+      z-index: 20;
+    }
+
+    .control-btn {
+      height: 40px;
+      padding: 0 16px;
+      border: 1px solid rgba(102, 187, 255, 0.75);
+      border-radius: 6px;
+      color: #dbeeff;
+      background: rgba(6, 25, 44, 0.85);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .control-btn:hover {
+      background: rgba(14, 42, 65, 0.95);
+    }
+
+    .end-btn {
+      border-color: rgba(255, 109, 106, 0.75);
+      color: #ffb3b3;
+      background: rgba(40, 8, 16, 0.72);
+    }
+
+    .end-btn:hover {
+      background: rgba(64, 12, 24, 0.9);
     }
 
     .tag {
@@ -229,27 +265,6 @@
       background: rgba(8, 38, 70, 0.86);
     }
 
-    .pause-btn {
-      position: fixed;
-      left: 18px;
-      bottom: 18px;
-      z-index: 20;
-      height: 40px;
-      padding: 0 16px;
-      border: 1px solid rgba(102, 187, 255, 0.75);
-      border-radius: 6px;
-      color: #dbeeff;
-      background: rgba(6, 25, 44, 0.85);
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
-      cursor: pointer;
-      font-size: 15px;
-      font-weight: 700;
-    }
-
-    .pause-btn:hover {
-      background: rgba(14, 42, 65, 0.95);
-    }
-
     .logout-btn {
       position: fixed;
       right: 18px;
@@ -389,9 +404,12 @@
 </head>
 <body>
   <canvas id="game"></canvas>
+  <div class="top-actions">
+    <button id="pauseBtn" class="control-btn" type="button">暂停</button>
+    <button id="endBtn" class="control-btn end-btn" type="button">结束</button>
+  </div>
   <button id="leaderboardBtn" class="leaderboard-btn" type="button">排行榜</button>
   <button id="logoutBtn" class="logout-btn" type="button">登出</button>
-  <button id="pauseBtn" class="pause-btn" type="button">暂停</button>
 
   <div class="hud">
     <div class="tag">分数：<span id="score">0</span></div>
@@ -468,6 +486,7 @@
     const leaderboardBtn = document.getElementById('leaderboardBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const pauseBtn = document.getElementById('pauseBtn');
+    const endBtn = document.getElementById('endBtn');
     const accountPanel = document.getElementById('accountPanel');
     const accountSelect = document.getElementById('accountSelect');
     const accountSwitchBtn = document.getElementById('accountSwitchBtn');
@@ -546,6 +565,13 @@
       }
     });
 
+    endBtn.addEventListener('click', () => {
+      if (!state.running) return;
+      state.paused = false;
+      pauseBtn.textContent = '暂停';
+      endGame();
+    });
+
     const musicTracks = [
       { label: 'Bub8les - Time Paradox', file: 'Bub8les _ RazorFrost _ Rare - Time Paradox With Lyrics _ Undertale (feat_ RazorFrost & Rare).mp4' },
       { label: 'Silver Lake', file: "Dan Gibson's Solitudes - Silver Lake_H.ogg" },
@@ -579,7 +605,7 @@
     }
 
     function getTrackUrl(track) {
-      return `./music/${encodeURIComponent(track.file)}`;
+      return `/music/${encodeURIComponent(track.file)}`;
     }
 
     function playMusic(index) {
