@@ -35,7 +35,20 @@ public HttpFirewall defaultHttpFirewall() {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/login.html", "/register.html", "/game.html", "/leaderboard.html", "/", "/js/**", "/assets/**", "/music/**").permitAll()
+                        .requestMatchers(
+                                "/login.html",
+                                "/register.html",
+                                "/game.html",
+                                "/leaderboard.html",
+                                "/",
+                                "/js/**",
+                                "/assets/**",
+                                "/music/**",
+                                "/audio/**",
+                                "/static/**",
+                                "/**/*.ogg",
+                                "/**/*.mp3"
+                        ).permitAll()
                         .requestMatchers("/api/login", "/api/register", "/api/leaderboard").permitAll()
                         .anyRequest().authenticated()
                 )
