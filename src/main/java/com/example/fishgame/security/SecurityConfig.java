@@ -27,12 +27,13 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/music/**").permitAll()
-                        .requestMatchers("/login.html", "/register.html", "/game.html", "/leaderboard.html", "/", "/js/**", "/assets/**").permitAll()
-                        .requestMatchers("/api/login", "/api/register", "/api/leaderboard").permitAll()
-                        .anyRequest().authenticated()
-                )
+    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+    .requestMatchers(new AntPathRequestMatcher("/music/**")).permitAll()
+    .requestMatchers("/login.html", "/register.html", "/game.html",
+                     "/leaderboard.html", "/", "/js/**", "/assets/**").permitAll()
+    .requestMatchers("/api/login", "/api/register", "/api/leaderboard").permitAll()
+    .anyRequest().authenticated()
+)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
