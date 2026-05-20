@@ -23,12 +23,21 @@ async function parseResponse(response) {
 }
 
 async function request(path, options = {}) {
+    // Only set JSON content-type for requests with a body (e.g., POST/PUT),
+    // avoid setting it for simple GET requests to prevent CORS preflight.
+    const headers = {
+        ...(options.headers || {})
+    };
+
+    const method = (options.method || 'GET').toUpperCase();
+    if (options.body && !headers['Content-Type'] && !headers['content-type']) {
+        headers['Content-Type'] = 'application/json';
+    }
+
     const response = await fetch(`${API_BASE_URL}${path}`, {
-        headers: {
-            "Content-Type": "application/json",
-            ...(options.headers || {})
-        },
-        ...options
+        headers,
+        ...options,
+        method
     });
 
     return parseResponse(response);
