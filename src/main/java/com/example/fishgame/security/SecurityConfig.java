@@ -14,7 +14,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
 
 import java.util.Arrays;
 
@@ -27,11 +27,10 @@ public class SecurityConfig {
         return http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
+            .authorizeHttpRequests(auth -> auth
     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-    .requestMatchers(new AntPathRequestMatcher("/music/**")).permitAll()
     .requestMatchers("/login.html", "/register.html", "/game.html",
-                     "/leaderboard.html", "/", "/js/**", "/assets/**").permitAll()
+                     "/leaderboard.html", "/", "/js/**", "/assets/**", "/music/**").permitAll()
     .requestMatchers("/api/login", "/api/register", "/api/leaderboard").permitAll()
     .anyRequest().authenticated()
 )
