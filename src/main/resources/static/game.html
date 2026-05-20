@@ -465,6 +465,7 @@
     <label for="musicSelect">选择音乐栏位</label>
     <select id="musicSelect"></select>
     <button id="musicPlayBtn" type="button">播放选中音乐</button>
+    <button id="musicStopBtn" type="button" class="secondary-btn">取消音乐</button>
     <div class="music-mode-buttons">
       <button id="modeSequential" type="button" class="active">顺序</button>
       <button id="modeRandom" type="button">随机</button>
@@ -510,6 +511,7 @@
     const musicControls = document.getElementById('musicControls');
     const musicSelect = document.getElementById('musicSelect');
     const musicPlayBtn = document.getElementById('musicPlayBtn');
+    const musicStopBtn = document.getElementById('musicStopBtn');
     const modeSequential = document.getElementById('modeSequential');
     const modeRandom = document.getElementById('modeRandom');
     const modeLoop = document.getElementById('modeLoop');
@@ -560,6 +562,7 @@
     };
 
     leaderboardBtn.addEventListener('click', () => {
+      saveMusicState();
       window.location.href = 'leaderboard.html';
     });
 
@@ -623,8 +626,47 @@
       `).join('');
     }
 
+    const MUSIC_STATE_KEY = 'fishgameMusicState';
+
     function getTrackUrl(track) {
       return `/music/${encodeURIComponent(track.file)}`;
+    }
+
+    function saveMusicState() {
+      const state = {
+        trackIndex: currentTrackIndex,
+        currentTime: audio.currentTime || 0,
+        musicMode,
+        isPlaying: !audio.paused && !audio.ended && !!audio.src,
+        selectedIndex: musicSelect.value
+      };
+      localStorage.setItem(MUSIC_STATE_KEY, JSON.stringify(state));
+    }
+
+    function clearMusicState() {
+      localStorage.removeItem(MUSIC_STATE_KEY);
+    }
+
+    function restoreMusicState() {
+      const saved = localStorage.getItem(MUSIC_STATE_KEY);
+      if (!saved) return;
+      try {
+        const savedState = JSON.parse(saved);
+        if (savedState.trackIndex != null && musicTracks[savedState.trackIndex]) {
+          currentTrackIndex = savedState.trackIndex;
+          musicSelect.value = String(currentTrackIndex);
+          setMusicMode(savedState.musicMode || 'sequential');
+          if (savedState.isPlaying) {
+            audio.src = getTrackUrl(musicTracks[currentTrackIndex]);
+            audio.currentTime = savedState.currentTime || 0;
+            audio.play().catch(() => {
+              musicStatus.textContent = '恢复音乐失败，请点击播放按钮继续。';
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('恢复音乐状态失败', err);
+      }
     }
 
     function playMusic(index) {
@@ -638,6 +680,16 @@
       });
       musicStatus.textContent = `正在播放：${musicTracks[currentTrackIndex].label}`;
       musicSelect.value = String(currentTrackIndex);
+      saveMusicState();
+    }
+
+    function stopMusic() {
+      if (!audio.paused || audio.src) {
+        audio.pause();
+        audio.src = '';
+        musicStatus.textContent = '音乐已取消。';
+        clearMusicState();
+      }
     }
 
     function selectNextTrack() {
@@ -679,6 +731,10 @@
       playMusic(selectedIndex);
     });
 
+    musicStopBtn.addEventListener('click', () => {
+      stopMusic();
+    });
+
     musicSelect.addEventListener('change', () => {
       const selectedIndex = parseInt(musicSelect.value, 10);
       if (!Number.isNaN(selectedIndex)) {
@@ -689,9 +745,6 @@
     modeSequential.addEventListener('click', () => setMusicMode('sequential'));
     modeRandom.addEventListener('click', () => setMusicMode('random'));
     modeLoop.addEventListener('click', () => setMusicMode('loop'));
-
-    populateMusicSelect();
-    setMusicMode('sequential');
 
     accountSelect.addEventListener('change', () => {
       accountSwitchBtn.disabled = !accountSelect.value;
@@ -728,6 +781,7 @@
     });
 
     overlayLeaderboardBtn.addEventListener('click', () => {
+      saveMusicState();
       window.location.href = 'leaderboard.html';
     });
 
@@ -1258,10 +1312,15 @@
       modeBtn.style.display = 'none';
     }
     setMobileMode(false);
+    populateMusicSelect();
+    setMusicMode('sequential');
+    restoreMusicState();
     showNormalStartOverlay();
     resize();
     renderHud();
     loop();
+
+    window.addEventListener('beforeunload', saveMusicState);
   </script>
 </body>
 </html>
