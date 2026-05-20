@@ -28,6 +28,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                       .requestMatchers("/music/**").permitAll()
                         .requestMatchers("/login.html", "/register.html", "/game.html", "/leaderboard.html", "/", "/js/**", "/assets/**").permitAll()
                         .requestMatchers("/api/login", "/api/register", "/api/leaderboard").permitAll()
                         .anyRequest().authenticated()
