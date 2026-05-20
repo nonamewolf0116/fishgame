@@ -31,24 +31,6 @@
 | 构建工具 | Maven、Java 17、Lombok |
 | 部署平台 | Railway |
 
----
-📁 项目结构
-src/main/java/com/example/fishgame/
-├── controller/        # AuthController、ScoreController
-├── security/          # JWT 过滤器、SecurityConfig、CORS 配置
-├── entity/            # User、Score 实体
-├── repository/        # JPA Repository
-├── dto/               # 请求体 DTO
-└── util/              # JwtUtil
-
-src/main/resources/static/
-├── game.html          # 游戏主页面
-├── login.html         # 登录页
-├── register.html      # 注册页
-├── leaderboard.html   # 排行榜页面
-├── js/                # api.js、fishSprites.js
-└── assets/            # 鱼类精灵图资源
----
 📡 主要 API
 
 | 方法 | 路径 | 说明 | 是否需要认证 |
