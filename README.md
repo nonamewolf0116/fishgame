@@ -34,23 +34,20 @@
 ---
 📁 项目结构
 src/main/java/com/example/fishgame/
-├── controller/         AuthController、ScoreController
-├── security/           JWT 过滤器、SecurityConfig、CORS 配置
-├── entity/             User、Score 实体
-├── repository/         JPA Repository
-├── dto/                请求体 DTO
-└── util/               JwtUtil
+├── controller/        # AuthController、ScoreController
+├── security/          # JWT 过滤器、SecurityConfig、CORS 配置
+├── entity/            # User、Score 实体
+├── repository/        # JPA Repository
+├── dto/               # 请求体 DTO
+└── util/              # JwtUtil
 
 src/main/resources/static/
-├── game.html          <img width="1849" height="993" alt="6de37aac-a224-4ea4-ac83-59b21fde1c99" src="https://github.com/user-attachments/assets/7e293071-175b-4382-8c59-c1b858c717e5" />
-<img width="1856" height="990" alt="3787fbe9-6abf-4189-b8ea-f7750f36d620" src="https://github.com/user-attachments/assets/6d40020d-98e1-4d9c-82b8-ce3add982fe2" />
- 游戏主页面
-├── login.html          登录页
-├── register.html       注册页
-├── leaderboard.html    排行榜页面
-├── js/                 api.js、fishSprites.js
-└── assets/             鱼类精灵图资源
-
+├── game.html          # 游戏主页面
+├── login.html         # 登录页
+├── register.html      # 注册页
+├── leaderboard.html   # 排行榜页面
+├── js/                # api.js、fishSprites.js
+└── assets/            # 鱼类精灵图资源
 ---
 📡 主要 API
 
