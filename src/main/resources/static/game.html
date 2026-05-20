@@ -33,10 +33,19 @@
       cursor: crosshair;
     }
 
-    .hud {
+    .top-bar {
       position: fixed;
-      top: 68px;
-      left: 12px;
+      top: 18px;
+      left: 18px;
+      right: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-right: 140px;
+      z-index: 20;
+    }
+
+    .hud {
       display: flex;
       gap: 8px;
       align-items: center;
@@ -47,16 +56,28 @@
       padding: 8px 10px;
       font-size: 14px;
       user-select: none;
-      z-index: 20;
     }
 
     .top-actions {
-      position: fixed;
-      top: 18px;
-      left: 18px;
       display: flex;
       gap: 8px;
-      z-index: 20;
+      margin-left: auto;
+    }
+
+    .music-controls {
+      position: fixed;
+      top: 76px;
+      right: 18px;
+      width: 320px;
+      max-width: calc(100vw - 36px);
+      margin-top: 0;
+      padding: 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      text-align: left;
+      display: none;
+      z-index: 30;
     }
 
     .control-btn {
@@ -344,16 +365,6 @@
       text-align: left;
     }
 
-    .music-controls {
-      margin-top: 12px;
-      padding: 14px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      text-align: left;
-      display: none;
-    }
-
     .music-controls.show {
       display: block;
     }
@@ -404,18 +415,20 @@
 </head>
 <body>
   <canvas id="game"></canvas>
-  <div class="top-actions">
-    <button id="pauseBtn" class="control-btn" type="button">暂停</button>
-    <button id="endBtn" class="control-btn end-btn" type="button">结束</button>
+  <div class="top-bar">
+    <div class="hud">
+      <div class="tag">分数：<span id="score">0</span></div>
+      <div class="tag">体型：<span id="size">22</span></div>
+      <div class="tag">血量：<span id="lives">♥♥♥</span></div>
+    </div>
+    <div class="top-actions">
+      <button id="pauseBtn" class="control-btn" type="button">暂停</button>
+      <button id="endBtn" class="control-btn end-btn" type="button">结束</button>
+      <button id="musicBtn" class="control-btn" type="button">音乐</button>
+    </div>
   </div>
   <button id="leaderboardBtn" class="leaderboard-btn" type="button">排行榜</button>
   <button id="logoutBtn" class="logout-btn" type="button">登出</button>
-
-  <div class="hud">
-    <div class="tag">分数：<span id="score">0</span></div>
-    <div class="tag">体型：<span id="size">22</span></div>
-    <div class="tag">血量：<span id="lives">♥♥♥</span></div>
-  </div>
 
   <div class="mobile-tools">
     <button id="modeBtn" class="mode-btn" type="button">横屏+转盘：关</button>
@@ -441,22 +454,23 @@
         <p id="accountHint" class="account-hint">如果已保存账号，可在此直接登录后开始游戏。</p>
       </div>
       <button id="musicToggleBtn" class="music-panel-toggle" type="button">音乐设置</button>
-      <div class="music-controls" id="musicControls">
-        <label for="musicSelect">选择音乐栏位</label>
-        <select id="musicSelect"></select>
-        <button id="musicPlayBtn" type="button">播放选中音乐</button>
-        <div class="music-mode-buttons">
-          <button id="modeSequential" type="button" class="active">顺序</button>
-          <button id="modeRandom" type="button">随机</button>
-          <button id="modeLoop" type="button">循环</button>
-        </div>
-        <p class="music-status" id="musicStatus">准备播放音乐。</p>
-      </div>
       <div class="card-actions">
         <button id="btn" type="button">开始游戏</button>
         <button id="overlayLeaderboardBtn" class="secondary-btn" type="button">排行榜</button>
       </div>
     </div>
+  </div>
+
+  <div class="music-controls" id="musicControls">
+    <label for="musicSelect">选择音乐栏位</label>
+    <select id="musicSelect"></select>
+    <button id="musicPlayBtn" type="button">播放选中音乐</button>
+    <div class="music-mode-buttons">
+      <button id="modeSequential" type="button" class="active">顺序</button>
+      <button id="modeRandom" type="button">随机</button>
+      <button id="modeLoop" type="button">循环</button>
+    </div>
+    <p class="music-status" id="musicStatus">准备播放音乐。</p>
   </div>
 
   <script type="module">
@@ -492,6 +506,7 @@
     const accountSwitchBtn = document.getElementById('accountSwitchBtn');
     const accountHint = document.getElementById('accountHint');
     const musicToggleBtn = document.getElementById('musicToggleBtn');
+    const musicBtn = document.getElementById('musicBtn');
     const musicControls = document.getElementById('musicControls');
     const musicSelect = document.getElementById('musicSelect');
     const musicPlayBtn = document.getElementById('musicPlayBtn');
@@ -580,9 +595,13 @@
       { label: 'Braniac Maniac', file: 'Laura Shigihara - Braniac Maniac_L.ogg' },
       { label: 'Aruarian Dance', file: 'Nujabes _ Fat Jon - Aruarian Dance.flac' },
       { label: 'Before the Story', file: 'Toby Fox - Before the Story.flac' },
-      { label: 'Перемотка - Встречная', file: 'Перемотка - Встречная_L.ogg' },
-      { label: 'Misty Memory', file: '塞壬唱片-MSR _ Elvin Shen _ ZT _ Erik Castro _ David Lin _ 左乙 - Misty Memory (Night Version)_L.ogg' },
-      { label: 'No Bet, No Life', file: '塞壬唱片-MSR _ N2V - No Bet, No Life.flac' }
+      { label: 'Peremotka - Vstrechnaya', file: 'Peremotka - Vstrechnaya_L.ogg' },
+      { label: 'Misty Memory (Night Version)', file: 'MSR_Elvin_Shen_ZT_Erik_Castro_David_Lin_ZuoYi_-_Misty_Memory_(Night_Version)_L.ogg' },
+      { label: 'No Bet, No Life', file: 'MSR_N2V_-_No_Bet_No_Life.flac' },
+      { label: 'Something Just Like This', file: 'Alex Goot _ MADILYN - Something Just Like This.flac' },
+      { label: 'Anomalous Spectrum', file: 'MSR_Camilo_Forero_-_Anomalous_Spectrum.flac' },
+      { label: 'Theoretical Simulation', file: 'MSR_SKa2or_-_Theoretical_Simulation.flac' },
+      { label: 'Eternal Breath', file: 'MSR_YU_-_Eternal_Breath.flac' }
     ];
 
     const audio = new Audio();
@@ -637,7 +656,7 @@
       playMusic(nextIndex);
     });
 
-    musicToggleBtn.addEventListener('click', () => {
+    function toggleMusicPanel() {
       const showing = musicControls.classList.toggle('show');
       btn.disabled = showing;
       musicToggleBtn.textContent = showing ? '关闭音乐设置' : '音乐设置';
@@ -646,7 +665,10 @@
       } else {
         musicStatus.textContent = '音乐设置已关闭。';
       }
-    });
+    }
+
+    musicToggleBtn.addEventListener('click', toggleMusicPanel);
+    musicBtn.addEventListener('click', toggleMusicPanel);
 
     musicPlayBtn.addEventListener('click', () => {
       const selectedIndex = parseInt(musicSelect.value, 10);
