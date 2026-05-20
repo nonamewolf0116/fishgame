@@ -37,10 +37,10 @@
       position: fixed;
       top: 18px;
       left: 18px;
-      right: 18px;
       display: flex;
       align-items: center;
       gap: 8px;
+      max-width: calc(100vw - 36px);
       padding-right: 140px;
       z-index: 20;
     }
@@ -263,7 +263,7 @@
 
     .leaderboard-btn,
     .logout-btn {
-      z-index: 18;
+      z-index: 45;
     }
 
     .leaderboard-btn {
@@ -369,6 +369,48 @@
       display: block;
     }
 
+    .music-progress {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .music-progress span {
+      min-width: 44px;
+      font-size: 12px;
+      color: #dcdcdc;
+      text-align: center;
+    }
+
+    .music-progress input {
+      flex: 1;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.18);
+      appearance: none;
+      outline: none;
+    }
+
+    .music-progress input::-webkit-slider-thumb {
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ffd166;
+      cursor: pointer;
+      border: none;
+    }
+
+    .music-progress input::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ffd166;
+      cursor: pointer;
+      border: none;
+    }
+
     .music-controls label,
     .music-controls p {
       margin: 6px 0;
@@ -424,7 +466,7 @@
     <div class="top-actions">
       <button id="pauseBtn" class="control-btn" type="button">暂停</button>
       <button id="endBtn" class="control-btn end-btn" type="button">结束</button>
-      <button id="musicBtn" class="control-btn" type="button">音乐</button>
+      <button id="musicBtn" class="control-btn" type="button" style="display:none;">音乐</button>
     </div>
   </div>
   <button id="leaderboardBtn" class="leaderboard-btn" type="button">排行榜</button>
@@ -453,7 +495,6 @@
         </div>
         <p id="accountHint" class="account-hint">如果已保存账号，可在此直接登录后开始游戏。</p>
       </div>
-      <button id="musicToggleBtn" class="music-panel-toggle" type="button">音乐设置</button>
       <div class="card-actions">
         <button id="btn" type="button">开始游戏</button>
         <button id="overlayLeaderboardBtn" class="secondary-btn" type="button">排行榜</button>
@@ -465,7 +506,12 @@
     <label for="musicSelect">选择音乐栏位</label>
     <select id="musicSelect"></select>
     <button id="musicPlayBtn" type="button">播放选中音乐</button>
-    <button id="musicStopBtn" type="button" class="secondary-btn">取消音乐</button>
+    <button id="musicStopBtn" type="button" class="secondary-btn">暂停音乐</button>
+    <div class="music-progress">
+      <span id="musicCurrentTime">00:00</span>
+      <input id="musicProgress" type="range" min="0" max="100" step="0.1" value="0" />
+      <span id="musicTotalTime">00:00</span>
+    </div>
     <div class="music-mode-buttons">
       <button id="modeSequential" type="button" class="active">顺序</button>
       <button id="modeRandom" type="button">随机</button>
@@ -506,12 +552,14 @@
     const accountSelect = document.getElementById('accountSelect');
     const accountSwitchBtn = document.getElementById('accountSwitchBtn');
     const accountHint = document.getElementById('accountHint');
-    const musicToggleBtn = document.getElementById('musicToggleBtn');
     const musicBtn = document.getElementById('musicBtn');
     const musicControls = document.getElementById('musicControls');
     const musicSelect = document.getElementById('musicSelect');
     const musicPlayBtn = document.getElementById('musicPlayBtn');
     const musicStopBtn = document.getElementById('musicStopBtn');
+    const musicProgress = document.getElementById('musicProgress');
+    const musicCurrentTime = document.getElementById('musicCurrentTime');
+    const musicTotalTime = document.getElementById('musicTotalTime');
     const modeSequential = document.getElementById('modeSequential');
     const modeRandom = document.getElementById('modeRandom');
     const modeLoop = document.getElementById('modeLoop');
@@ -675,7 +723,9 @@
       }
       currentTrackIndex = index;
       audio.src = getTrackUrl(musicTracks[currentTrackIndex]);
-      audio.play().catch(() => {
+      audio.play().then(() => {
+        musicStopBtn.textContent = '暂停音乐';
+      }).catch(() => {
         musicStatus.textContent = '无法播放音乐，请检查浏览器是否允许自动播放或音频文件是否已加载。';
       });
       musicStatus.textContent = `正在播放：${musicTracks[currentTrackIndex].label}`;
@@ -683,12 +733,48 @@
       saveMusicState();
     }
 
-    function stopMusic() {
-      if (!audio.paused || audio.src) {
+    function toggleMusicPause() {
+      if (!audio.src) {
+        return;
+      }
+      if (audio.paused) {
+        audio.play().then(() => {
+          musicStatus.textContent = `继续播放：${musicTracks[currentTrackIndex].label}`;
+          musicStopBtn.textContent = '暂停音乐';
+          saveMusicState();
+        }).catch(() => {
+          musicStatus.textContent = '无法恢复播放，请点击播放按钮重试。';
+        });
+      } else {
         audio.pause();
-        audio.src = '';
-        musicStatus.textContent = '音乐已取消。';
-        clearMusicState();
+        musicStopBtn.textContent = '继续音乐';
+        musicStatus.textContent = `已暂停：${musicTracks[currentTrackIndex].label}`;
+        saveMusicState();
+      }
+    }
+
+    function formatTime(seconds) {
+      if (!Number.isFinite(seconds)) {
+        return '00:00';
+      }
+      const minutes = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function updateProgress() {
+      const duration = audio.duration || 0;
+      const currentTime = audio.currentTime || 0;
+      if (duration > 0 && Number.isFinite(duration)) {
+        musicProgress.max = String(duration);
+        musicProgress.value = String(currentTime);
+        musicCurrentTime.textContent = formatTime(currentTime);
+        musicTotalTime.textContent = formatTime(duration);
+      } else {
+        musicProgress.max = '100';
+        musicProgress.value = '0';
+        musicCurrentTime.textContent = '00:00';
+        musicTotalTime.textContent = '00:00';
       }
     }
 
@@ -703,6 +789,8 @@
       return (currentTrackIndex + 1) % musicTracks.length;
     }
 
+    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('durationchange', updateProgress);
     audio.addEventListener('ended', () => {
       const nextIndex = selectNextTrack();
       playMusic(nextIndex);
@@ -711,7 +799,7 @@
     function toggleMusicPanel() {
       const showing = musicControls.classList.toggle('show');
       btn.disabled = showing;
-      musicToggleBtn.textContent = showing ? '关闭音乐设置' : '音乐设置';
+      musicBtn.textContent = showing ? '关闭音乐' : '音乐';
       if (showing) {
         musicStatus.textContent = '请选择一个音乐栏位并播放。';
       } else {
@@ -719,7 +807,6 @@
       }
     }
 
-    musicToggleBtn.addEventListener('click', toggleMusicPanel);
     musicBtn.addEventListener('click', toggleMusicPanel);
 
     musicPlayBtn.addEventListener('click', () => {
@@ -728,17 +815,30 @@
         musicStatus.textContent = '请选择要播放的音乐。';
         return;
       }
-      playMusic(selectedIndex);
+      if (audio.src && selectedIndex === currentTrackIndex && audio.paused) {
+        toggleMusicPause();
+      } else {
+        playMusic(selectedIndex);
+      }
     });
 
-    musicStopBtn.addEventListener('click', () => {
-      stopMusic();
-    });
+    musicStopBtn.addEventListener('click', toggleMusicPause);
 
     musicSelect.addEventListener('change', () => {
       const selectedIndex = parseInt(musicSelect.value, 10);
       if (!Number.isNaN(selectedIndex)) {
         musicStatus.textContent = `已选择：${musicTracks[selectedIndex].label}`;
+        if (audio.src && !audio.paused && selectedIndex !== currentTrackIndex) {
+          playMusic(selectedIndex);
+        }
+      }
+    });
+
+    musicProgress.addEventListener('input', (event) => {
+      const value = Number(event.target.value);
+      if (!Number.isNaN(value) && audio.src) {
+        audio.currentTime = value;
+        updateProgress();
       }
     });
 
@@ -1088,6 +1188,7 @@
       state.paused = false;
       pauseBtn.textContent = '暂停';
       state.running = true;
+      musicBtn.style.display = 'inline-flex';
       overlay.classList.remove('show');
     }
 
@@ -1104,6 +1205,7 @@
       overlayLeaderboardBtn.style.display = 'inline-flex';
       btn.disabled = true;
       overlayLeaderboardBtn.disabled = true;
+      musicBtn.style.display = 'none';
       btn.onclick = startGame;
       overlayLeaderboardBtn.onclick = () => window.location.href = 'leaderboard.html';
 
@@ -1140,7 +1242,7 @@
       msgEl.textContent = '准备好开始了吗？';
       renderAccountSwitcher();
       musicControls.classList.remove('show');
-      musicToggleBtn.textContent = '音乐设置';
+      musicBtn.style.display = 'none';
       btn.disabled = false;
       btn.textContent = '开始游戏';
       overlay.classList.add('show');

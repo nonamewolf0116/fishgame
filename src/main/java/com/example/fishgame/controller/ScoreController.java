@@ -3,7 +3,7 @@ package com.example.fishgame.controller;
 import com.example.fishgame.common.ApiResponse;
 import com.example.fishgame.entity.Score;
 import com.example.fishgame.repository.ScoreRepository;
-import org.springframework.data.domain.PageRequest;
+import com.example.fishgame.service.LeaderboardService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,9 +19,11 @@ import java.util.Map;
 public class ScoreController {
 
     private final ScoreRepository scoreRepository;
+    private final LeaderboardService leaderboardService;
 
-    public ScoreController(ScoreRepository scoreRepository) {
+    public ScoreController(ScoreRepository scoreRepository, LeaderboardService leaderboardService) {
         this.scoreRepository = scoreRepository;
+        this.leaderboardService = leaderboardService;
     }
 
     @PostMapping("/score")
@@ -42,12 +44,14 @@ public class ScoreController {
         score.setScore(toInteger(scoreValue));
         score.setCreateTime(LocalDateTime.now());
 
-        return ApiResponse.success("上传成功", scoreRepository.save(score));
+        Score saved = scoreRepository.save(score);
+        leaderboardService.evictLeaderboardCache();
+        return ApiResponse.success("上传成功", saved);
     }
 
     @GetMapping("/leaderboard")
     public ApiResponse<List<Score>> leaderboard() {
-        return ApiResponse.success("查询成功", scoreRepository.findUserBestScores(PageRequest.of(0, 20)));
+        return ApiResponse.success("查询成功", leaderboardService.getLeaderboard());
     }
 
     private Integer toInteger(Object value) {
