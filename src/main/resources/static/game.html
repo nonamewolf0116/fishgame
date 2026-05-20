@@ -58,22 +58,6 @@
       white-space: nowrap;
     }
 
-    .help {
-      position: fixed;
-      right: 12px;
-      top: 64px;
-      max-width: 320px;
-      line-height: 1.45;
-      font-size: 13px;
-      background: var(--panel);
-      backdrop-filter: blur(4px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 12px;
-      padding: 10px 12px;
-      user-select: none;
-      z-index: 20;
-    }
-
     .mobile-tools {
       position: fixed;
       right: 12px;
@@ -204,15 +188,6 @@
         font-size: 12px;
       }
 
-      .help {
-        top: 56px;
-        right: 8px;
-        max-width: min(58vw, 250px);
-        font-size: 12px;
-        line-height: 1.4;
-        padding: 8px 9px;
-      }
-
       .mobile-tools {
         right: 8px;
         bottom: 8px;
@@ -226,11 +201,7 @@
     }
 
     @media (orientation: portrait) and (max-width: 900px) {
-      body.mobile-mode .help::after {
-        content: "\A建议切到横屏体验转盘控制";
-        white-space: pre;
-        color: #ffd166;
-      }
+      /* portrait hint removed */
     }
 
     .leaderboard-btn,
@@ -256,6 +227,27 @@
 
     .leaderboard-btn:hover {
       background: rgba(8, 38, 70, 0.86);
+    }
+
+    .pause-btn {
+      position: fixed;
+      left: 18px;
+      bottom: 18px;
+      z-index: 20;
+      height: 40px;
+      padding: 0 16px;
+      border: 1px solid rgba(102, 187, 255, 0.75);
+      border-radius: 6px;
+      color: #dbeeff;
+      background: rgba(6, 25, 44, 0.85);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .pause-btn:hover {
+      background: rgba(14, 42, 65, 0.95);
     }
 
     .logout-btn {
@@ -323,23 +315,88 @@
       color: #c4e7ff;
       line-height: 1.45;
     }
+
+    .music-panel-toggle {
+      width: 100%;
+      margin-top: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 209, 102, 0.5);
+      background: rgba(3, 22, 42, 0.9);
+      color: #ffd166;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    .music-controls {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      text-align: left;
+      display: none;
+    }
+
+    .music-controls.show {
+      display: block;
+    }
+
+    .music-controls label,
+    .music-controls p {
+      margin: 6px 0;
+      font-size: 13px;
+      color: #dcdcdc;
+    }
+
+    .music-controls select,
+    .music-controls button {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 10px 12px;
+      font-size: 14px;
+      background: rgba(3, 22, 42, 0.95);
+      color: #f7f9ff;
+    }
+
+    .music-mode-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .music-mode-buttons button {
+      flex: 1;
+      min-width: 30%;
+      background: rgba(255, 255, 255, 0.08);
+      color: #c9dfff;
+    }
+
+    .music-mode-buttons button.active {
+      background: rgba(255, 209, 102, 0.95);
+      color: #12212f;
+    }
+
+    .music-status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #b9d2ff;
+    }
   </style>
 </head>
 <body>
   <canvas id="game"></canvas>
   <button id="leaderboardBtn" class="leaderboard-btn" type="button">排行榜</button>
   <button id="logoutBtn" class="logout-btn" type="button">登出</button>
+  <button id="pauseBtn" class="pause-btn" type="button">暂停</button>
 
   <div class="hud">
     <div class="tag">分数：<span id="score">0</span></div>
     <div class="tag">体型：<span id="size">22</span></div>
     <div class="tag">血量：<span id="lives">♥♥♥</span></div>
-  </div>
-
-  <div class="help" id="help">
-    鼠标/触摸/键盘（W/A/S/D、方向键）控制大鱼。<br>
-    手机可点右下角进入“横屏+转盘”模式。<br>
-    小鱼为原创矢量素材风格，支持免费非商用使用。
   </div>
 
   <div class="mobile-tools">
@@ -364,6 +421,18 @@
           <button id="accountSwitchBtn" class="secondary-btn" type="button" disabled>登录</button>
         </div>
         <p id="accountHint" class="account-hint">如果已保存账号，可在此直接登录后开始游戏。</p>
+      </div>
+      <button id="musicToggleBtn" class="music-panel-toggle" type="button">音乐设置</button>
+      <div class="music-controls" id="musicControls">
+        <label for="musicSelect">选择音乐栏位</label>
+        <select id="musicSelect"></select>
+        <button id="musicPlayBtn" type="button">播放选中音乐</button>
+        <div class="music-mode-buttons">
+          <button id="modeSequential" type="button" class="active">顺序</button>
+          <button id="modeRandom" type="button">随机</button>
+          <button id="modeLoop" type="button">循环</button>
+        </div>
+        <p class="music-status" id="musicStatus">准备播放音乐。</p>
       </div>
       <div class="card-actions">
         <button id="btn" type="button">开始游戏</button>
@@ -398,10 +467,19 @@
     const livesEl = document.getElementById('lives');
     const leaderboardBtn = document.getElementById('leaderboardBtn');
     const logoutBtn = document.getElementById('logoutBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
     const accountPanel = document.getElementById('accountPanel');
     const accountSelect = document.getElementById('accountSelect');
     const accountSwitchBtn = document.getElementById('accountSwitchBtn');
     const accountHint = document.getElementById('accountHint');
+    const musicToggleBtn = document.getElementById('musicToggleBtn');
+    const musicControls = document.getElementById('musicControls');
+    const musicSelect = document.getElementById('musicSelect');
+    const musicPlayBtn = document.getElementById('musicPlayBtn');
+    const modeSequential = document.getElementById('modeSequential');
+    const modeRandom = document.getElementById('modeRandom');
+    const modeLoop = document.getElementById('modeLoop');
+    const musicStatus = document.getElementById('musicStatus');
     const overlayLeaderboardBtn = document.getElementById('overlayLeaderboardBtn');
     const overlay = document.getElementById('overlay');
     const titleEl = document.getElementById('title');
@@ -427,6 +505,7 @@
       fish: [],
       bubbles: [],
       mobileMode: false,
+      paused: false,
       joystick: {
         engaged: false,
         pointerId: null,
@@ -455,6 +534,116 @@
       localStorage.removeItem('username');
       window.location.href = 'login.html';
     });
+
+    pauseBtn.addEventListener('click', () => {
+      if (!state.running) return;
+      state.paused = !state.paused;
+      pauseBtn.textContent = state.paused ? '继续' : '暂停';
+      if (state.paused) {
+        musicStatus.textContent = '游戏已暂停，背景音乐继续播放。';
+      } else {
+        musicStatus.textContent = '继续游戏。';
+      }
+    });
+
+    const musicTracks = [
+      { label: 'Bub8les - Time Paradox', file: 'Bub8les _ RazorFrost _ Rare - Time Paradox With Lyrics _ Undertale (feat_ RazorFrost & Rare).mp4' },
+      { label: 'Silver Lake', file: "Dan Gibson's Solitudes - Silver Lake_H.ogg" },
+      { label: 'Clear skies beyond the storm', file: 'eugenio izzi - Clear skies beyond the storm_H.ogg' },
+      { label: 'You Ballin In The Wrong Neighborhood', file: 'Exsire - You Ballin In The Wrong Neighborhood (No Jumpscare Ending since a lot of people asked me to release a version without ballin at the end, so here it is)_H.mp4' },
+      { label: 'Braniac Maniac', file: 'Laura Shigihara - Braniac Maniac_L.ogg' },
+      { label: 'Aruarian Dance', file: 'Nujabes _ Fat Jon - Aruarian Dance.flac' },
+      { label: 'Before the Story', file: 'Toby Fox - Before the Story.flac' },
+      { label: 'Перемотка - Встречная', file: 'Перемотка - Встречная_L.ogg' },
+      { label: 'Misty Memory', file: '塞壬唱片-MSR _ Elvin Shen _ ZT _ Erik Castro _ David Lin _ 左乙 - Misty Memory (Night Version)_L.ogg' },
+      { label: 'No Bet, No Life', file: '塞壬唱片-MSR _ N2V - No Bet, No Life.flac' }
+    ];
+
+    const audio = new Audio();
+    audio.preload = 'metadata';
+    let currentTrackIndex = 0;
+    let musicMode = 'sequential';
+
+    function setMusicMode(mode) {
+      musicMode = mode;
+      modeSequential.classList.toggle('active', mode === 'sequential');
+      modeRandom.classList.toggle('active', mode === 'random');
+      modeLoop.classList.toggle('active', mode === 'loop');
+      musicStatus.textContent = `播放模式：${mode === 'sequential' ? '顺序' : mode === 'random' ? '随机' : '循环'}。`;
+    }
+
+    function populateMusicSelect() {
+      musicSelect.innerHTML = musicTracks.map((track, index) => `
+        <option value="${index}">${index + 1}. ${track.label}</option>
+      `).join('');
+    }
+
+    function getTrackUrl(track) {
+      return `./music/${encodeURIComponent(track.file)}`;
+    }
+
+    function playMusic(index) {
+      if (typeof index !== 'number' || index < 0 || index >= musicTracks.length) {
+        return;
+      }
+      currentTrackIndex = index;
+      audio.src = getTrackUrl(musicTracks[currentTrackIndex]);
+      audio.play().catch(() => {
+        musicStatus.textContent = '无法播放音乐，请检查浏览器是否允许自动播放或音频文件是否已加载。';
+      });
+      musicStatus.textContent = `正在播放：${musicTracks[currentTrackIndex].label}`;
+      musicSelect.value = String(currentTrackIndex);
+    }
+
+    function selectNextTrack() {
+      if (musicMode === 'loop') {
+        return currentTrackIndex;
+      }
+      if (musicMode === 'random') {
+        const next = Math.floor(Math.random() * musicTracks.length);
+        return next === currentTrackIndex ? (currentTrackIndex + 1) % musicTracks.length : next;
+      }
+      return (currentTrackIndex + 1) % musicTracks.length;
+    }
+
+    audio.addEventListener('ended', () => {
+      const nextIndex = selectNextTrack();
+      playMusic(nextIndex);
+    });
+
+    musicToggleBtn.addEventListener('click', () => {
+      const showing = musicControls.classList.toggle('show');
+      btn.disabled = showing;
+      musicToggleBtn.textContent = showing ? '关闭音乐设置' : '音乐设置';
+      if (showing) {
+        musicStatus.textContent = '请选择一个音乐栏位并播放。';
+      } else {
+        musicStatus.textContent = '音乐设置已关闭。';
+      }
+    });
+
+    musicPlayBtn.addEventListener('click', () => {
+      const selectedIndex = parseInt(musicSelect.value, 10);
+      if (Number.isNaN(selectedIndex)) {
+        musicStatus.textContent = '请选择要播放的音乐。';
+        return;
+      }
+      playMusic(selectedIndex);
+    });
+
+    musicSelect.addEventListener('change', () => {
+      const selectedIndex = parseInt(musicSelect.value, 10);
+      if (!Number.isNaN(selectedIndex)) {
+        musicStatus.textContent = `已选择：${musicTracks[selectedIndex].label}`;
+      }
+    });
+
+    modeSequential.addEventListener('click', () => setMusicMode('sequential'));
+    modeRandom.addEventListener('click', () => setMusicMode('random'));
+    modeLoop.addEventListener('click', () => setMusicMode('loop'));
+
+    populateMusicSelect();
+    setMusicMode('sequential');
 
     accountSelect.addEventListener('change', () => {
       accountSwitchBtn.disabled = !accountSelect.value;
@@ -794,6 +983,8 @@
 
     function startGame() {
       resetGame();
+      state.paused = false;
+      pauseBtn.textContent = '暂停';
       state.running = true;
       overlay.classList.remove('show');
     }
@@ -846,12 +1037,15 @@
       titleEl.textContent = '大鱼吃小鱼';
       msgEl.textContent = '准备好开始了吗？';
       renderAccountSwitcher();
+      musicControls.classList.remove('show');
+      musicToggleBtn.textContent = '音乐设置';
+      btn.disabled = false;
       btn.textContent = '开始游戏';
       overlay.classList.add('show');
     }
 
     function loop() {
-      if (state.running) {
+      if (state.running && !state.paused) {
         state.spawnTick -= 1;
         if (state.spawnTick <= 0) {
           spawnFish();
@@ -863,7 +1057,7 @@
         updateFish();
         updateBubbles();
         renderHud();
-      } else {
+      } else if (!state.running) {
         updateBubbles();
         if (Math.random() < 0.2) spawnBubble();
       }
