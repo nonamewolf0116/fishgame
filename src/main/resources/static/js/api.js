@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://fishgame-production-2c91.up.railway.app/api";
+const API_BASE_URL = "/api";
 
 async function parseResponse(response) {
     const text = await response.text();
