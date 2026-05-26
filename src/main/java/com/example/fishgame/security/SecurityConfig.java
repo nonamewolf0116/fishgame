@@ -1,5 +1,6 @@
 package com.example.fishgame.security;
 
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -35,6 +36,7 @@ public HttpFirewall defaultHttpFirewall() {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         .requestMatchers(
                                 "/login.html",
                                 "/register.html",
@@ -49,6 +51,9 @@ public HttpFirewall defaultHttpFirewall() {
                                 "/music/**",
                                 "/audio/**",
                                 "/static/**",
+                                "/public/**",
+                                "/resources/**",
+                                "/META-INF/resources/**",
                                 "/**/*.css",
                                 "/**/*.js",
                                 "/**/*.png",
@@ -56,6 +61,10 @@ public HttpFirewall defaultHttpFirewall() {
                                 "/**/*.svg",
                                 "/**/*.ico",
                                 "/**/*.json",
+                                "/**/*.woff2",
+                                "/**/*.woff",
+                                "/**/*.ttf",
+                                "/**/*.map",
                                 "/**/*.ogg",
                                 "/**/*.mp3"
                         ).permitAll()
