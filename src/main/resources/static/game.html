@@ -81,6 +81,10 @@
     }
 
     .control-btn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 84px;
       height: 40px;
       padding: 0 16px;
       border: 1px solid rgba(102, 187, 255, 0.75);
@@ -91,6 +95,7 @@
       cursor: pointer;
       font-size: 15px;
       font-weight: 700;
+      text-align: center;
     }
 
     .control-btn:hover {
@@ -258,7 +263,79 @@
     }
 
     @media (orientation: portrait) and (max-width: 900px) {
-      /* portrait hint removed */
+      .top-bar {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        padding: 10px 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-width: calc(100vw - 20px);
+      }
+
+      .top-actions {
+        width: 100%;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .control-btn {
+        min-width: 68px;
+        padding: 0 12px;
+        font-size: 13px;
+      }
+
+      .leaderboard-btn,
+      .logout-btn {
+        right: 12px;
+        padding: 0 12px;
+        height: 36px;
+        font-size: 13px;
+      }
+
+      .logout-btn {
+        bottom: 56px;
+      }
+
+      .music-controls {
+        width: calc(100vw - 20px);
+        max-width: 360px;
+        right: 10px;
+        left: 10px;
+      }
+
+      .card {
+        width: min(100%, 95vw);
+        max-width: 360px;
+        padding: 18px;
+      }
+
+      .card-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .card-actions button {
+        width: 100%;
+      }
+
+      .account-row {
+        grid-template-columns: 1fr;
+      }
+
+      .account-row button {
+        width: 100%;
+      }
+
+      .music-mode-buttons {
+        gap: 6px;
+      }
+
+      .music-mode-buttons button {
+        min-width: 0;
+        flex: 1;
+      }
     }
 
     .leaderboard-btn,
@@ -796,16 +873,32 @@
       playMusic(nextIndex);
     });
 
+    function updateMusicPanelPosition() {
+      const rect = musicBtn.getBoundingClientRect();
+      const panelWidth = musicControls.offsetWidth || 320;
+      const left = Math.min(Math.max(10, rect.left), window.innerWidth - panelWidth - 10);
+      musicControls.style.left = `${left}px`;
+      musicControls.style.top = `${Math.min(window.innerHeight - musicControls.offsetHeight - 10, rect.bottom + 8)}px`;
+      musicControls.style.right = 'auto';
+    }
+
     function toggleMusicPanel() {
       const showing = musicControls.classList.toggle('show');
       btn.disabled = showing;
       musicBtn.textContent = showing ? '关闭音乐' : '音乐';
       if (showing) {
+        updateMusicPanelPosition();
         musicStatus.textContent = '请选择一个音乐栏位并播放。';
       } else {
         musicStatus.textContent = '音乐设置已关闭。';
       }
     }
+
+    window.addEventListener('resize', () => {
+      if (musicControls.classList.contains('show')) {
+        updateMusicPanelPosition();
+      }
+    });
 
     musicBtn.addEventListener('click', toggleMusicPanel);
 
