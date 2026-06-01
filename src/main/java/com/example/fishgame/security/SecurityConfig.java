@@ -38,7 +38,7 @@ public HttpFirewall defaultHttpFirewall() {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/leaderboard").permitAll()
+                        .requestMatchers("/api/leaderboard", "/api/login", "/api/register").permitAll()
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         .requestMatchers(
                                 "/login.html",
@@ -71,7 +71,6 @@ public HttpFirewall defaultHttpFirewall() {
                                 "/**/*.ogg",
                                 "/**/*.mp3"
                         ).permitAll()
-                        .requestMatchers("/api/login", "/api/register").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
