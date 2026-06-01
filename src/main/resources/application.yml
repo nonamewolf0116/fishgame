@@ -7,10 +7,6 @@ spring:
     username: root
     password: ofwyPQGiClQcbltgkKwAiiHeputzBBmZ
     driver-class-name: com.mysql.cj.jdbc.Driver
-  redis:
-    host: localhost
-    port: 6379
-    timeout: 6000ms
 
   jpa:
     hibernate:
