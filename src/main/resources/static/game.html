@@ -537,7 +537,7 @@
   <div class="top-bar">
     <div class="hud">
       <div class="tag">分数：<span id="score">0</span></div>
-      <div class="tag">体型：<span id="size">22</span></div>
+      <div class="tag">体型：<span id="size">20%</span></div>
       <div class="tag">血量：<span id="lives">♥♥♥</span></div>
     </div>
     <div class="top-actions">
@@ -574,6 +574,7 @@
       </div>
       <div class="card-actions">
         <button id="btn" type="button">开始游戏</button>
+        <button id="uploadBtn" class="secondary-btn" type="button" style="display:none">上传分数</button>
         <button id="overlayLeaderboardBtn" class="secondary-btn" type="button">排行榜</button>
       </div>
     </div>
@@ -603,6 +604,11 @@
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     const fishImage = new Image();
+    fishImage.onerror = () => {
+      console.error('[FishGame] 鱼素材加载失败，请检查 assets/fish.png 是否存在');
+      msgEl.textContent = '资源加载失败，请刷新重试';
+      btn.disabled = true;
+    };
     fishImage.src = './assets/fish.png';
     const playerFishSprite = { x: 68, y: 332, width: 78, height: 64 };
     const fishSprites = {
@@ -646,6 +652,7 @@
     const titleEl = document.getElementById('title');
     const msgEl = document.getElementById('msg');
     const btn = document.getElementById('btn');
+    const uploadBtn = document.getElementById('uploadBtn');
     const modeBtn = document.getElementById('modeBtn');
     const joystickEl = document.getElementById('joystick');
     const stickEl = document.getElementById('stick');
@@ -1034,6 +1041,12 @@
       return Math.hypot(a.x - b.x, a.y - b.y);
     }
 
+    function dist2(a, b) {
+      const dx = a.x - b.x;
+      const dy = a.y - b.y;
+      return dx * dx + dy * dy;
+    }
+
     function clamp(v, min, max) {
       return Math.max(min, Math.min(max, v));
     }
@@ -1157,7 +1170,8 @@
           continue;
         }
 
-        const hit = dist(player, f) <= player.r + f.r;
+        const threshold = player.r + f.r;
+        const hit = dist2(player, f) <= threshold * threshold;
         if (!hit) continue;
 
         if (player.r >= f.r * 1.02) {
@@ -1253,10 +1267,26 @@
       drawPlayerFish();
     }
 
+    let _hudScore = -1;
+    let _hudR = -1;
+    let _hudLives = '';
     function renderHud() {
-      scoreEl.textContent = String(state.score);
-      sizeEl.textContent = player.r.toFixed(1);
-      livesEl.textContent = '♥'.repeat(Math.max(0, state.lives));
+      const sc = state.score;
+      const r = player.r;
+      const lives = '♥'.repeat(Math.max(0, state.lives));
+      if (sc !== _hudScore) {
+        scoreEl.textContent = String(sc);
+        _hudScore = sc;
+      }
+      if (Math.abs(r - _hudR) > 0.05) {
+        const pct = Math.min(100, Math.round((r / 110) * 100));
+        sizeEl.textContent = pct + '%';
+        _hudR = r;
+      }
+      if (lives !== _hudLives) {
+        livesEl.textContent = lives;
+        _hudLives = lives;
+      }
     }
 
     function resetGame() {
@@ -1282,6 +1312,9 @@
       pauseBtn.textContent = '暂停';
       state.running = true;
       musicBtn.style.display = 'inline-flex';
+      uploadBtn.style.display = 'none';
+      uploadBtn.style.color = '';
+      uploadBtn.disabled = false;
       overlay.classList.remove('show');
     }
 
@@ -1296,34 +1329,21 @@
       btn.textContent = '再来一局';
       overlayLeaderboardBtn.textContent = '排行榜';
       overlayLeaderboardBtn.style.display = 'inline-flex';
-      btn.disabled = true;
-      overlayLeaderboardBtn.disabled = true;
+      btn.disabled = false;
+      overlayLeaderboardBtn.disabled = false;
       musicBtn.style.display = 'none';
       btn.onclick = startGame;
       overlayLeaderboardBtn.onclick = () => window.location.href = 'leaderboard.html';
 
       if (token) {
-        titleEl.textContent = '上传中...';
-        msgEl.innerHTML = `最终分数：<b>${finalScore}</b><br>当前体型：<b>${currentSize}</b><br>正在自动上传分数...`;
-
-        uploadScore(finalScore)
-          .then(() => {
-            titleEl.textContent = '上传成功';
-            msgEl.innerHTML = `最终分数：<b>${finalScore}</b><br>当前体型：<b>${currentSize}</b><br>分数已上传，点击下方开始新游戏。`;
-          })
-          .catch((err) => {
-            titleEl.textContent = '上传失败';
-            msgEl.innerHTML = `最终分数：<b>${finalScore}</b><br>当前体型：<b>${currentSize}</b><br>${err.message || '上传失败，请稍后重试。'}`;
-          })
-          .finally(() => {
-            btn.disabled = false;
-            overlayLeaderboardBtn.disabled = false;
-          });
+        uploadBtn.style.display = '';
+        uploadBtn.textContent = '上传分数';
+        uploadBtn.disabled = false;
+        uploadBtn.style.color = '';
       } else {
         titleEl.textContent = '游戏结束';
-        msgEl.innerHTML = `最终分数：<b>${finalScore}</b><br>当前体型：<b>${currentSize}</b><br>未登录时分数不会自动上传，登录后可自动上传。`;
-        btn.disabled = false;
-        overlayLeaderboardBtn.disabled = false;
+        msgEl.innerHTML = `最终分数：<b>${finalScore}</b><br>当前体型：<b>${currentSize}</b><br>未登录时分数不会上传，登录后可上传。`;
+        uploadBtn.style.display = 'none';
       }
 
       renderAccountSwitcher();
@@ -1338,15 +1358,24 @@
       musicBtn.style.display = 'none';
       btn.disabled = false;
       btn.textContent = '开始游戏';
+      uploadBtn.style.display = 'none';
+      uploadBtn.style.color = '';
+      uploadBtn.disabled = false;
       overlay.classList.add('show');
     }
 
     function loop() {
+      if (document.hidden) {
+        requestAnimationFrame(loop);
+        return;
+      }
       if (state.running && !state.paused) {
         state.spawnTick -= 1;
         if (state.spawnTick <= 0) {
           spawnFish();
-          state.spawnTick = Math.max(18, Math.floor(Math.random() * 24 + 34));
+          const cappedLv = Math.min(Math.floor(state.score / 25), 15);
+          const baseMin = Math.max(16, 40 - cappedLv * 1.5);
+          state.spawnTick = Math.floor(rand(baseMin, baseMin + 18));
         }
         if (Math.random() < 0.35) spawnBubble();
 
@@ -1495,6 +1524,13 @@
 
     window.addEventListener('resize', resize);
 
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        Object.keys(state.keys).forEach((key) => { state.keys[key] = false; });
+        resetJoystick();
+      }
+    });
+
     modeBtn.addEventListener('click', async () => {
       const next = !state.mobileMode;
       setMobileMode(next);
@@ -1502,6 +1538,19 @@
     });
 
     btn.onclick = startGame;
+
+    uploadBtn.addEventListener('click', async function () {
+      this.disabled = true;
+      this.textContent = '上传中...';
+      try {
+        await uploadScore(state.score);
+        this.textContent = '✓ 上传成功';
+        this.style.color = '#b8ffd9';
+      } catch (err) {
+        this.textContent = err.message || '上传失败，点击重试';
+        this.disabled = false;
+      }
+    });
 
     if (!isTouchDevice) {
       modeBtn.style.display = 'none';

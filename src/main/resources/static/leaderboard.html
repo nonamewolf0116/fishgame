@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>深海鱼战 - 排行榜</title>
+    <title>大鱼吃小鱼 - 排行榜</title>
     <style>
         * {
             box-sizing: border-box;
@@ -137,7 +137,7 @@
 <main class="panel">
     <div class="header">
         <div>
-            <h1>深海排行榜</h1>
+            <h1>排行榜</h1>
             <p class="subtitle">Top 20 大鱼猎手</p>
         </div>
         <button id="backBtn" type="button">返回游戏</button>
@@ -183,13 +183,18 @@
                 return;
             }
 
-            tbody.innerHTML = list.slice(0, 20).map((item, index) => `
-                <tr>
-                    <td class="rank">#${index + 1}</td>
-                    <td>${escapeHtml(item.username || '')}</td>
-                    <td class="score">${item.score ?? 0}</td>
-                </tr>
-            `).join('');
+            const medals = ['🥇', '🥈', '🥉'];
+            tbody.innerHTML = list.slice(0, 20).map((item, index) => {
+                const rankDisplay = medals[index] ?? `#${index + 1}`;
+                const isTop3 = index < 3;
+                return `
+                    <tr style="${isTop3 ? 'font-weight:700;' : ''}">
+                        <td class="rank" style="${isTop3 ? 'font-size:20px;' : ''}">${rankDisplay}</td>
+                        <td>${escapeHtml(item.username || '')}</td>
+                        <td class="score">${item.score ?? 0}</td>
+                    </tr>
+                `;
+            }).join('');
         } catch (err) {
             tbody.innerHTML = `<tr><td class="message" colspan="3">${escapeHtml(err.message || '获取排行榜失败')}</td></tr>`;
         }

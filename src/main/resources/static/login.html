@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>深海鱼战 - 登录</title>
+    <title>大鱼吃小鱼 - 登录</title>
     <style>
         * {
             box-sizing: border-box;
@@ -133,8 +133,8 @@
 <div class="fish two">&gt;&lt;&gt;</div>
 
 <main class="login-box">
-    <h1>深海鱼战</h1>
-    <p class="subtitle">登录后开始大鱼吃小鱼</p>
+    <h1>大鱼吃小鱼</h1>
+    <p class="subtitle">登录后开始游戏</p>
 
     <form id="loginForm">
         <label for="username">用户名</label>
@@ -144,6 +144,7 @@
         <input id="password" type="password" autocomplete="current-password" required>
 
         <button type="submit">登录</button>
+        <p id="loginError" style="color:#f09595;font-size:13px;margin:10px 0 0;display:none"></p>
     </form>
     <div id="message" class="message"></div>
 
@@ -159,6 +160,7 @@
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const messageEl = document.getElementById('message');
+    const loginErrorEl = document.getElementById('loginError');
     const MAX_SAVED_ACCOUNTS = 3;
 
     function setMessage(text, type = 'info') {
@@ -212,13 +214,18 @@
 
         const username = usernameInput.value.trim();
         const password = passwordInput.value.trim();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        loginErrorEl.style.display = 'none';
 
         if (!username || !password) {
-            setMessage('用户名和密码不能为空', 'error');
+            loginErrorEl.textContent = '用户名和密码不能为空';
+            loginErrorEl.style.display = 'block';
             return;
         }
 
         try {
+            submitBtn.disabled = true;
+            submitBtn.textContent = '登录中...';
             await login(username, password);
             saveAccount(username, password);
             setMessage('登录成功，正在进入游戏...', 'success');
@@ -226,7 +233,10 @@
                 window.location.href = 'game.html';
             }, 600);
         } catch (err) {
-            setMessage(err.message || '登录失败', 'error');
+            loginErrorEl.textContent = err.message || '登录失败，请检查用户名和密码';
+            loginErrorEl.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = '登录';
         }
     });
 </script>
