@@ -23,8 +23,6 @@ async function parseResponse(response) {
 }
 
 async function request(path, options = {}) {
-    // Only set JSON content-type for requests with a body (e.g., POST/PUT),
-    // avoid setting it for simple GET requests to prevent CORS preflight.
     const headers = {
         ...(options.headers || {})
     };
@@ -49,7 +47,7 @@ export async function register(username, password) {
         body: JSON.stringify({ username, password })
     });
 
-    if (!result.success) {
+    if (result.code !== 200) {
         throw new Error(result.message || "注册失败");
     }
 
@@ -62,7 +60,7 @@ export async function login(username, password) {
         body: JSON.stringify({ username, password })
     });
 
-    if (!result.success) {
+    if (result.code !== 200) {
         throw new Error(result.message || "登录失败");
     }
 
@@ -96,7 +94,7 @@ export async function uploadScore(score) {
 
     const result = await parseResponse(response);
 
-    if (!result.success) {
+    if (result.code !== 200) {
         throw new Error(result.message || "上传分数失败");
     }
 
@@ -105,4 +103,43 @@ export async function uploadScore(score) {
 
 export async function getLeaderboard() {
     return request("/leaderboard");
+}
+
+export async function searchMusic(keyword, offset = 0, limit = 20) {
+    return request(`/music/search?keyword=${encodeURIComponent(keyword)}&offset=${offset}&limit=${limit}`);
+}
+
+export async function getPlayUrl(songId) {
+    return request(`/music/play/${songId}`);
+}
+
+export async function getFavorites() {
+    const token = localStorage.getItem("token");
+    if (!token) return { code: 401, message: "未登录", data: [] };
+    const response = await fetch(`${API_BASE_URL}/music/favorite/list`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+    return parseResponse(response);
+}
+
+export async function addFavorite(songId, track) {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/music/favorite/${songId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(track)
+    });
+    return parseResponse(response);
+}
+
+export async function removeFavorite(songId) {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/music/favorite/${songId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+    return parseResponse(response);
 }

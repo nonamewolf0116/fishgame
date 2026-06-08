@@ -1,17 +1,34 @@
 server:
   port: ${PORT:8080}
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/css,text/javascript,audio/mpeg,audio/ogg
 
 spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/fishgame?useSSL=false&serverTimezone=Asia/Shanghai}
-    username: ${DB_USER:root}
-    password: ${DB_PASS:123456}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL:jdbc:sqlite:./data/fishgame.db}
+    driver-class-name: org.sqlite.JDBC
+    username:
+    password:
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: update
-    show-sql: ${SHOW_SQL:false}
+    show-sql: false
     properties:
       hibernate:
+        dialect: org.hibernate.community.dialect.SQLiteDialect
         format_sql: false
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+
+  web:
+    resources:
+      static-locations: file:/opt/fishgame/static/,classpath:/static/
+
+youtube:
+  api:
+    key: ${YOUTUBE_API_KEY:}

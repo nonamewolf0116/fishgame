@@ -1,0 +1,74 @@
+﻿[
+    {
+        "artist":  "Camilo Forero",
+        "title":  "Anomalous Spectrum",
+        "id":  1,
+        "file":  "Camilo Forero - Anomalous Spectrum.mp3"
+    },
+    {
+        "artist":  "Dan Gibson\u0027s Solitudes",
+        "title":  "Silver Lake",
+        "id":  2,
+        "file":  "Dan Gibson\u0027s Solitudes - Silver Lake.mp3"
+    },
+    {
+        "artist":  "Eugenio Izzi",
+        "title":  "Clear Skies Beyond the Storm",
+        "id":  3,
+        "file":  "eugenio izzi - Clear skies beyond the storm_H.ogg"
+    },
+    {
+        "artist":  "Exsire",
+        "title":  "You Ballin In The Wrong Neighborhood",
+        "id":  4,
+        "file":  "Exsire - You Ballin In The Wrong Neighborhood (No Jumpscare Ending since a lot of people asked me to release a version without ballin at the end, so here it is)_H.mp4"
+    },
+    {
+        "artist":  "Elvin Shen, ZT, Erik Castro, David Lin",
+        "title":  "Misty Memory (Night Version)",
+        "id":  5,
+        "file":  "Misty Memory (Night Version).ogg"
+    },
+    {
+        "artist":  "Nujabes, Fat Jon",
+        "title":  "Aruarian Dance",
+        "id":  6,
+        "file":  "Nujabes _ Fat Jon - Aruarian Dance.mp3"
+    },
+    {
+        "artist":  "Peremotka",
+        "title":  "Vstrechnaya",
+        "id":  7,
+        "file":  "Peremotka - Vstrechnaya.ogg"
+    },
+    {
+        "artist":  "SHIKI",
+        "title":  "Epilogue",
+        "id":  8,
+        "file":  "SHIKI - Epilogue.ogg"
+    },
+    {
+        "artist":  "Bub8les, RazorFrost, Rare",
+        "title":  "Time Paradox",
+        "id":  9,
+        "file":  "Time Paradox.mp3"
+    },
+    {
+        "artist":  "Toby Fox",
+        "title":  "Before the Story",
+        "id":  10,
+        "file":  "Toby Fox - Before the Story.flac"
+    },
+    {
+        "artist":  "Toby Fox",
+        "title":  "My Castle Town",
+        "id":  11,
+        "file":  "Toby Fox - My Castle Town_L.ogg"
+    },
+    {
+        "artist":  "YU",
+        "title":  "Eternal Breath",
+        "id":  12,
+        "file":  "YU - Eternal Breath.mp3"
+    }
+]

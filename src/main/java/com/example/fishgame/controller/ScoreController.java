@@ -53,7 +53,11 @@ public class ScoreController {
 
     @GetMapping("/leaderboard")
     public ApiResponse<List<Score>> leaderboard() {
-        return ApiResponse.success("查询成功", leaderboardService.getLeaderboard());
+        try {
+            return ApiResponse.success(leaderboardService.getLeaderboard());
+        } catch (Exception e) {
+            return ApiResponse.success(List.of());
+        }
     }
 
     private Integer toInteger(Object value) {

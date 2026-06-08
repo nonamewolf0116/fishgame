@@ -174,7 +174,7 @@
             const result = await getLeaderboard();
             const list = result.data || [];
 
-            if (!result.success) {
+            if (result.code !== 200) {
                 throw new Error(result.message || '获取排行榜失败');
             }
 

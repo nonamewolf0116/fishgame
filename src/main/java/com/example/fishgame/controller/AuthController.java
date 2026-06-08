@@ -49,7 +49,7 @@ public class AuthController {
         User user = userRepository.findByUsername(request.getUsername()).orElse(null);
 
         if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            return ApiResponse.fail("用户名或密码错误");
+            return ApiResponse.fail(401, "用户名或密码错误");
         }
 
         String token = JwtUtil.generateToken(user.getUsername());

@@ -17,7 +17,11 @@ public class LeaderboardService {
     }
 
     public List<Score> getLeaderboard() {
-        return scoreRepository.findUserBestScores(PageRequest.of(0, 20));
+        try {
+            return scoreRepository.findUserBestScores(PageRequest.of(0, 20));
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 
     public void evictLeaderboardCache() {

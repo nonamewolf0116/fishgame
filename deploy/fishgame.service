@@ -1,0 +1,20 @@
+[Unit]
+Description=FishGame Application
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/fishgame
+Environment="DB_URL=jdbc:sqlite:/opt/fishgame/database/fishgame.db"
+Environment="YOUTUBE_API_KEY="
+ExecStart=/opt/fishgame/start.sh
+SuccessExitStatus=143
+Restart=always
+RestartSec=5
+StandardOutput=append:/opt/fishgame/logs/fishgame.log
+StandardError=append:/opt/fishgame/logs/fishgame-error.log
+
+[Install]
+WantedBy=multi-user.target

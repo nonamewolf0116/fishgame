@@ -1,8 +1,8 @@
 package com.example.fishgame.security;
 
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -16,9 +16,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.security.web.firewall.DefaultHttpFirewall;
-import org.springframework.security.web.firewall.HttpFirewall;
-
 
 import java.util.Arrays;
 
@@ -33,11 +30,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public HttpFirewall defaultHttpFirewall() {
-        return new DefaultHttpFirewall();
-    }
-
-    @Bean
+    @Order(1)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .cors(Customizer.withDefaults())
@@ -45,40 +38,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/leaderboard", "/api/login", "/api/register").permitAll()
-                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                        .requestMatchers(
-                                "/login.html",
-                                "/register.html",
-                                "/game.html",
-                                "/leaderboard.html",
-                                "/",
-                                "/favicon.ico",
-                                "/manifest.json",
-                                "/robots.txt",
-                                "/js/**",
-                                "/assets/**",
-                                "/music/**",
-                                "/audio/**",
-                                "/static/**",
-                                "/public/**",
-                                "/resources/**",
-                                "/META-INF/resources/**",
-                                "/**/*.css",
-                                "/**/*.js",
-                                "/**/*.png",
-                                "/**/*.jpg",
-                                "/**/*.svg",
-                                "/**/*.ico",
-                                "/**/*.json",
-                                "/**/*.woff2",
-                                "/**/*.woff",
-                                "/**/*.ttf",
-                                "/**/*.map",
-                                "/**/*.ogg",
-                                "/**/*.mp3"
-                        ).permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/music/favorite/**").authenticated()
+                        .anyRequest().permitAll()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
@@ -91,8 +52,6 @@ public class SecurityConfig {
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
-        // Do not allow credentials when allowed origin patterns includes wildcard,
-        // this avoids CORS failures for public endpoints like the leaderboard.
         configuration.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
